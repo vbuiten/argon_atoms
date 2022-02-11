@@ -9,7 +9,7 @@ class BoxBase:
             self.lengths = (lengths,)
 
         else:
-            self.length = lengths
+            self.lengths = lengths
 
         self.dim = len(self.lengths)
 
