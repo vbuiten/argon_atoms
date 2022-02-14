@@ -8,6 +8,9 @@ class Particles:
         self.dim = dim
         self.mass = mass
 
+    def __len__(self):
+        return self.n_atoms
+
     @property
     def positions(self):
         return self._positions
@@ -51,7 +54,3 @@ class Particles:
             cov = np.diag(vel * np.ones(self.dim))
             gauss = multivariate_normal(mean=mean, cov=cov)
             self._velocities = gauss.rvs(size=(self.n_atoms))
-
-
-    def __len__(self):
-        return self.n_atoms
