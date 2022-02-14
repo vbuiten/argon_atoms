@@ -3,9 +3,10 @@ from scipy.stats import multivariate_normal
 
 class Particles:
     '''Class for handling a set of n_atoms particles.'''
-    def __init__(self, n_atoms, dim):
+    def __init__(self, n_atoms, dim, mass=1):
         self.n_atoms = n_atoms
         self.dim = dim
+        self.mass = mass
 
     @property
     def positions(self):
@@ -50,3 +51,7 @@ class Particles:
             cov = np.diag(vel * np.ones(self.dim))
             gauss = multivariate_normal(mean=mean, cov=cov)
             self._velocities = gauss.rvs(size=(self.n_atoms))
+
+
+    def __len__(self):
+        return self.n_atoms
