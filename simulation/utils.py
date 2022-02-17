@@ -14,7 +14,7 @@ def distanceFromPosition(pos1, pos2):
 # need a function for evaluating the gradient of the Lennard-Jones potential
 # also need some class for storing constants and physical units
 
-def LennardJonesForce(pos1, pos_others, eps=119.8, sigma=3.405):
+def LennardJonesForce(pos1, pos_others, eps=119.8, sigma=3.405, soft_eps=0.00001):
     '''
     Computes the force acting on the particle with position 1 due to a Lennard-Jones potential
     caused by particles with positions pos_others.
@@ -50,7 +50,7 @@ def LennardJonesForce(pos1, pos_others, eps=119.8, sigma=3.405):
     # numpy can't automatically broadcast 2D and 1D --> loop over dimensions
     forceTerms = np.zeros(relativePositions.shape)
     for dim in range(relativePositions.shape[-1]):
-        forceTerms[:,dim] = relativePositions[:,dim]/distances**2 * (termPauli + termWaals)
+        forceTerms[:,dim] = relativePositions[:,dim]/(distances**2 + soft_eps) * (termPauli + termWaals)
 
     totalForce = 4*eps * np.sum(forceTerms, axis=0)
 
