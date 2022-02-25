@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.stats import multivariate_normal
+import h5py
 
 class Particles:
     '''Class for handling a set of n_atoms particles.'''
@@ -7,6 +8,8 @@ class Particles:
         self.n_atoms = n_atoms
         self.dim = dim
         self.mass = mass
+
+        self.savefile = None
 
     def __len__(self):
         return self.n_atoms
@@ -66,3 +69,17 @@ class Particles:
         kinetic_energy = 0.5 * np.sum(velsquared)
 
         return kinetic_energy
+
+    def createFile(self, savefile):
+        self.savefile = savefile
+        file = h5py.File(savefile, "w")
+        #datasets = file.create_dataset("particles", )
+
+    def saveToFile(self, savefile=None):
+
+        if self.savefile is None:
+            self.createFile(savefile)
+
+        file = h5py.File(self.savefile, "r+")
+        dataset = file["/particles"]
+        dataset["positions"].append(self.positions)
