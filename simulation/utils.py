@@ -29,7 +29,7 @@ def periodicCopies(positions, length):
 # need a function for evaluating the gradient of the Lennard-Jones potential
 # also need some class for storing constants and physical units
 
-def LennardJonesForce(pos1, pos_others, eps=119.8, sigma=3.405, soft_eps=0.00001):
+def LennardJonesForce(pos1, pos_others, eps=1., sigma=1., soft_eps=0):
     '''
     Computes the force acting on the particle with position 1 due to a Lennard-Jones potential
     caused by particles with positions pos_others.
