@@ -34,8 +34,9 @@ class NBodyWorker:
                 # rather than a circle/sphere
                 pos_diff = pos_others - pos
                 length = self.box.lengths[0]
-                pos_others = pos_others - length * (pos_diff/length).astype(int)
-                forces[i] = LennardJonesForce(pos, pos_others, soft_eps=0)
+                pos_others = (pos - pos_others + length/2) % length - length/2
+                #pos_others = pos_others - length * (pos_diff/length).astype(int)
+                forces[i] = LennardJonesForce(pos, pos_others)
 
             # now update the positions
             posadd = self.bodies.velocities * self.timestep

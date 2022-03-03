@@ -29,7 +29,7 @@ def periodicCopies(positions, length):
 # need a function for evaluating the gradient of the Lennard-Jones potential
 # also need some class for storing constants and physical units
 
-def LennardJonesForce(pos1, pos_others, eps=119.8, sigma=3.405, soft_eps=0.00001):
+def LennardJonesForce(pos1, pos_others, eps=1., sigma=1., soft_eps=0):
     '''
     Computes the force acting on the particle with position 1 due to a Lennard-Jones potential
     caused by particles with positions pos_others.
@@ -70,4 +70,51 @@ def LennardJonesForce(pos1, pos_others, eps=119.8, sigma=3.405, soft_eps=0.00001
     totalForce = 4*eps * np.sum(forceTerms, axis=0)
 
     return totalForce
+
+
+class UnitScaler:
+    '''Scaler used for keeping track of units. Initialised with SI units.'''
+
+    def __init__(self, mass=6.6e-26, length=3.405e-10, energy=1.654e-21):
+        self.mass_scale = mass
+        self.length_scale = length
+        self.energy_scale = energy
+        self.k_boltzmann = 1.380649e-23   # J/K
+
+    def toMeters(self, dimless_length):
+        return self.length_scale * dimless_length
+
+    def toDimlessLength(self, meters):
+        return meters / self.length_scale
+
+    def toSeconds(self, dimless_time):
+        factor = np.sqrt(self.mass_scale*self.length_scale**2 / self.energy_scale)
+        return factor * dimless_time
+
+    def toDimlessTime(self, seconds):
+        factor = np.sqrt(self.energy_scale / (self.mass_scale*self.length_scale**2))
+        return factor * seconds
+
+    def toMetersPerSecond(self, dimless_vel):
+        factor = np.sqrt(self.energy_scale/self.mass_scale)
+        return factor * dimless_vel
+
+    def toDimlessVelocity(self, meters_per_second):
+        factor = np.sqrt(self.mass_scale / self.energy_scale)
+        return factor * meters_per_second
+
+    def toKilogram(self, dimless_mass):
+        return self.mass_scale * dimless_mass
+
+    def toDimlessMass(self, kg):
+        return kg / self.mass_scale
+
+    def toJoule(self, dimless_energy):
+        return self.energy_scale * dimless_energy
+
+    def toKelvin(self, dimless_energy):
+        return self.toJoule(dimless_energy) / self.k_boltzmann
+
+    def toDimlessEnergy(self, joules):
+        return joules / self.energy_scale
 
