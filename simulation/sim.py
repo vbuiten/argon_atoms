@@ -17,11 +17,14 @@ class NBodyWorker:
         self.timestep = timestep
 
 
-    def saveToFile(self, savefile):
+    def saveToFile(self, savefile, times):
 
         file = h5py.File(savefile, "w")
         pos_dataset = file.create_dataset("position-history", data=self.pos_history)
         vel_dataset = file.create_dataset("velocity-history", data=self.vel_history)
+
+        pos_dataset.attrs["times"] = times
+        vel_dataset.attrs["times"] = times
 
         print (len(pos_dataset))
 
@@ -80,6 +83,6 @@ class NBodyWorker:
             self.pos_history = pos_history
             self.vel_history = vel_history
 
-            self.saveToFile(savefile)
+            self.saveToFile(savefile, times)
 
         print ("Simulation finished.")

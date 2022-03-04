@@ -7,9 +7,12 @@ class History:
         # load the saved data set
         datafile = h5py.File(filename, "r")
 
-        self.pos_history = datafile["position-history"]
-        self.vel_history = datafile["velocity-history"]
+        dset_pos = datafile["position-history"]
+        dset_vel = datafile["velocity-history"]
+
+        self.pos = np.copy(dset_pos)
+        self.vel = np.copy(dset_vel)
+
+        self.times = np.copy(dset_pos.attrs["times"])
 
         datafile.close()
-
-        #self.timesteps = len(self.pos_history)
