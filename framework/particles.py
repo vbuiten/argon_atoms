@@ -73,7 +73,10 @@ class Particles:
     def createFile(self, savefile):
         self.savefile = savefile
         file = h5py.File(savefile, "w")
+        file.create_group("positions")
+        file.create_group("velocities")
         #datasets = file.create_dataset("particles", )
+        file.close()
 
     def saveToFile(self, savefile=None):
 

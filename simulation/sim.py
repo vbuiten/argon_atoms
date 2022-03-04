@@ -2,6 +2,7 @@
 
 import numpy as np
 from simulation.utils import LennardJonesForce
+import h5py
 
 class NBodyWorker:
     def __init__(self, bodies, box, timestep=0.1):
@@ -16,11 +17,27 @@ class NBodyWorker:
         self.timestep = timestep
 
 
-    def evolve(self, t_end):
+    def saveToFile(self, savefile):
+
+        file = h5py.File(savefile, "w")
+        pos_dataset = file.create_dataset("position-history", data=self.pos_history)
+        vel_dataset = file.create_dataset("velocity-history", data=self.vel_history)
+
+        print (len(pos_dataset))
+
+        file.close()
+
+        print ("File created.")
+
+
+    def evolve(self, t_end, savefile=None):
 
         times = np.arange(self.time, self.time+t_end, self.timestep)
 
-        for time in times:
+        pos_history = np.zeros((len(times), len(self.bodies), self.box.dim))
+        vel_history = np.zeros((len(times), len(self.bodies), self.box.dim))
+
+        for idx, time in enumerate(times):
 
             # first compute the force acting on each particle
             forces = np.zeros(self.bodies.velocities.shape)
@@ -53,6 +70,16 @@ class NBodyWorker:
             if time/self.timestep % 100 == 0:
                 print ("Time:", time)
 
+            pos_history[idx] = self.bodies.positions
+            vel_history[idx] = self.bodies.velocities
+
         self.time = times[-1]
+
+        if savefile is not None:
+            # create a file
+            self.pos_history = pos_history
+            self.vel_history = vel_history
+
+            self.saveToFile(savefile)
 
         print ("Simulation finished.")
