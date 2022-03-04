@@ -14,5 +14,7 @@ class History:
         self.vel = np.copy(dset_vel)
 
         self.times = np.copy(dset_pos.attrs["times"])
+        self.dim = self.pos.shape[-1]
+        self.n_atoms = self.pos.shape[1]
 
         datafile.close()
