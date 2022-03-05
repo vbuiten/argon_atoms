@@ -33,9 +33,10 @@ class NBodyWorker:
         print ("File created.")
 
 
-    def evolve(self, t_end, savefile=None):
+    def evolve(self, t_end, savefile=None, timestep_external=1.):
 
         times = np.arange(self.time, self.time+t_end, self.timestep)
+        times_external = []
 
         pos_history = np.zeros((len(times), len(self.bodies), self.box.dim))
         vel_history = np.zeros((len(times), len(self.bodies), self.box.dim))
@@ -70,13 +71,15 @@ class NBodyWorker:
             self.bodies.positions = newpos
             self.bodies.velocities = newvel
 
-            if time/self.timestep % 100 == 0:
+            if time/timestep_external % 1 == 0:
+                times_external.append(time)
                 print ("Time:", time)
 
             pos_history[idx] = self.bodies.positions
             vel_history[idx] = self.bodies.velocities
 
         self.time = times[-1]
+        times_external = np.array(times_external)
 
         if savefile is not None:
             # create a file

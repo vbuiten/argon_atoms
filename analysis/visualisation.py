@@ -34,10 +34,21 @@ class TrajectoryPlotter:
             trajectory = self.history.pos[min_idx:max_idx,i]
 
             if self.plot3D:
-                self.ax.scatter(trajectory[0], trajectory[1], trajectory[2], alpha=0.5)
+                self.ax.scatter(trajectory[:,0], trajectory[:,1], trajectory[:,2], alpha=0.5)
 
             else:
-                self.ax.scatter(trajectory[0]. trajectory[1], alpha=0.5)
+                self.ax.scatter(trajectory[:,0], trajectory[:,1], alpha=0.5)
+
+    def plot(self, min_idx, max_idx):
+
+        for i in range(self.history.n_atoms):
+            trajectory = self.history.pos[min_idx:max_idx,i]
+
+            if self.plot3D:
+                self.ax.plot(trajectory[:,0], trajectory[:,1], trajectory[:,2], alpha=0.3, marker="o")
+
+            else:
+                self.ax.plot(trajectory[:,0], trajectory[:,1], alpha=0.3, marker="o")
 
     def show(self):
 
