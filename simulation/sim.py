@@ -56,12 +56,12 @@ class NBodyWorker:
                 pos_others = np.concatenate((self.bodies.positions[:i], self.bodies.positions[i + 1:]))
 
                 # implement the minimum image convention
-                # for simplicity we use a rectangular/cubic box
-                # rather than a circle/sphere
+                # we use a rectangular/cubic box
+                # because the framework is rectangular/cubic
                 pos_diff = pos_others - pos
                 length = self.box.lengths[0]
                 #pos_others = (pos - pos_others + length/2) % length - length/2
-                #pos_others = pos_others - length * (pos_diff/length).astype(int)
+                pos_others = pos_others - length * np.rint(pos_diff/length)
                 forces[i] = LennardJonesForce(pos, pos_others)
 
             # now update the positions
