@@ -26,6 +26,9 @@ class NBodyWorker:
         pos_dataset.attrs["times"] = times
         vel_dataset.attrs["times"] = times
 
+        pos_dataset.attrs["box-edges"] = self.box.edges
+        vel_dataset.attrs["box-edges"] = self.box.edges
+
         print (len(pos_dataset))
 
         file.close()
@@ -38,8 +41,10 @@ class NBodyWorker:
         times = np.arange(self.time, self.time+t_end, self.timestep)
         times_external = []
 
-        pos_history = np.zeros((len(times), len(self.bodies), self.box.dim))
-        vel_history = np.zeros((len(times), len(self.bodies), self.box.dim))
+        #pos_history = np.zeros((len(times_external), len(self.bodies), self.box.dim))
+        #vel_history = np.zeros((len(times_external), len(self.bodies), self.box.dim))
+        pos_history = []
+        vel_history = []
 
         for idx, time in enumerate(times):
 
@@ -71,12 +76,17 @@ class NBodyWorker:
             self.bodies.positions = newpos
             self.bodies.velocities = newvel
 
-            if time/timestep_external % 1 == 0:
+            if time % timestep_external == 0:
                 times_external.append(time)
                 print ("Time:", time)
+                #print ("Forces:", forces)
+                pos_history.append(self.bodies.positions)
+                vel_history.append(self.bodies.velocities)
 
-            pos_history[idx] = self.bodies.positions
-            vel_history[idx] = self.bodies.velocities
+        pos_history = np.array(pos_history)
+        vel_history = np.array(vel_history)
+            #pos_history[idx] = self.bodies.positions
+            #vel_history[idx] = self.bodies.velocities
 
         self.time = times[-1]
         times_external = np.array(times_external)
@@ -86,6 +96,6 @@ class NBodyWorker:
             self.pos_history = pos_history
             self.vel_history = vel_history
 
-            self.saveToFile(savefile, times)
+            self.saveToFile(savefile, times_external)
 
         print ("Simulation finished.")

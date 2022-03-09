@@ -16,5 +16,6 @@ class History:
         self.times = np.copy(dset_pos.attrs["times"])
         self.dim = self.pos.shape[-1]
         self.n_atoms = self.pos.shape[1]
+        self.box_edges = dset_pos.attrs["box-edges"]
 
         datafile.close()
