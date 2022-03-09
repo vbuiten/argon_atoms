@@ -60,7 +60,7 @@ class NBodyWorker:
                 # rather than a circle/sphere
                 pos_diff = pos_others - pos
                 length = self.box.lengths[0]
-                pos_others = (pos - pos_others + length/2) % length - length/2
+                #pos_others = (pos - pos_others + length/2) % length - length/2
                 #pos_others = pos_others - length * (pos_diff/length).astype(int)
                 forces[i] = LennardJonesForce(pos, pos_others)
 
@@ -71,7 +71,7 @@ class NBodyWorker:
             newpos = edges_cast[:,:,0] + (self.bodies.positions + posadd + 2*(edges_cast[:,:,1]-edges_cast[:,:,0])) % (edges_cast[:,:,1] - edges_cast[:,:,0])
 
             # and update the velocities
-            newvel = self.bodies.velocities + forces * self.timestep / self.bodies.mass
+            newvel = self.bodies.velocities + forces * self.timestep
 
             self.bodies.positions = newpos
             self.bodies.velocities = newvel

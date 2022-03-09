@@ -29,17 +29,15 @@ def periodicCopies(positions, length):
 # need a function for evaluating the gradient of the Lennard-Jones potential
 # also need some class for storing constants and physical units
 
-def LennardJonesForce(pos1, pos_others, eps=1., sigma=1., soft_eps=0):
+def LennardJonesForce(pos1, pos_others, soft_eps=0):
     '''
-    Computes the force acting on the particle with position 1 due to a Lennard-Jones potential
-    caused by particles with positions pos_others.
+    Computes the dimensionless force acting on the particle with position 1 due to a Lennard-Jones potential
+    caused by particles with dimensionless positions pos_others.
 
     Parameters
     ----------
     pos1 (ndarray): position of particle on which the force acts.
     pos_others (ndarray): positions of particles which cause the force. Shape (n_particles, dim).
-    eps: value of dielectric permittivity.
-    sigma: value of length scale sigma.
 
     Returns
     -------
@@ -53,9 +51,8 @@ def LennardJonesForce(pos1, pos_others, eps=1., sigma=1., soft_eps=0):
 
     # array calculations for speed
     # these are all 1D arrays of length n_other_particles
-    lengthFractions = sigma/distances
-    termPauli = -6 * (lengthFractions)**6
-    termWaals = 12 * (lengthFractions)**12
+    termPauli = -6 * (distances)**-6
+    termWaals = 12 * (distances)**-12
 
     # now compute the relative position vector x_i - x_j for each particle j
     # shape is (n_other_particles, dim)
@@ -67,7 +64,7 @@ def LennardJonesForce(pos1, pos_others, eps=1., sigma=1., soft_eps=0):
     for dim in range(relativePositions.shape[-1]):
         forceTerms[:,dim] = relativePositions[:,dim]/(distances**2 + soft_eps) * (termPauli + termWaals)
 
-    totalForce = 4*eps * np.sum(forceTerms, axis=0)
+    totalForce = 4 * np.sum(forceTerms, axis=0)
 
     return totalForce
 
