@@ -22,12 +22,14 @@ class NBodyWorker:
         file = h5py.File(savefile, "w")
         pos_dataset = file.create_dataset("position-history", data=self.pos_history)
         vel_dataset = file.create_dataset("velocity-history", data=self.vel_history)
+        E_kin_dataset = file.create_dataset("energy-history", data=self.energy_history)
 
         pos_dataset.attrs["times"] = times
         vel_dataset.attrs["times"] = times
 
         pos_dataset.attrs["box-edges"] = self.box.edges
         vel_dataset.attrs["box-edges"] = self.box.edges
+        E_kin_dataset.attrs["box-edges"] = self.box.edges
 
         print (len(pos_dataset))
 
@@ -45,11 +47,14 @@ class NBodyWorker:
         #vel_history = np.zeros((len(times_external), len(self.bodies), self.box.dim))
         pos_history = []
         vel_history = []
+        kinetic_energy = []
+        potential_energy = []
 
         for idx, time in enumerate(times):
 
             # first compute the force acting on each particle
             forces = np.zeros(self.bodies.velocities.shape)
+            length = self.box.lengths[0]
 
             for i in range(len(self.bodies)):
                 pos = self.bodies.positions[i]
@@ -59,7 +64,6 @@ class NBodyWorker:
                 # we use a rectangular/cubic box
                 # because the framework is rectangular/cubic
                 pos_diff = pos_others - pos
-                length = self.box.lengths[0]
                 #pos_others = (pos - pos_others + length/2) % length - length/2
                 pos_others = pos_others - length * np.rint(pos_diff/length)
                 forces[i] = LennardJonesForce(pos, pos_others)
@@ -82,9 +86,17 @@ class NBodyWorker:
                 #print ("Forces:", forces)
                 pos_history.append(self.bodies.positions)
                 vel_history.append(self.bodies.velocities)
+                kinetic_energy.append(self.bodies.kineticEnergy())
+
+                # computationally expensive potential energy calculation
+                potential_energy.append(self.bodies.potentialEnergy(length))
+
+        # placeholder total energy
+        total_energy = np.array(kinetic_energy) + np.array(potential_energy)
 
         pos_history = np.array(pos_history)
         vel_history = np.array(vel_history)
+        energy_history = np.array([times_external, kinetic_energy, potential_energy, total_energy]).T
             #pos_history[idx] = self.bodies.positions
             #vel_history[idx] = self.bodies.velocities
 
@@ -95,6 +107,7 @@ class NBodyWorker:
             # create a file
             self.pos_history = pos_history
             self.vel_history = vel_history
+            self.energy_history = energy_history
 
             self.saveToFile(savefile, times_external)
 

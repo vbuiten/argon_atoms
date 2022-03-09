@@ -4,25 +4,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import analysis.utils
-from analysis.utils import History
+from analysis.utils import load_history, PlotPreferences
 
 class TrajectoryPlotter:
-    def __init__(self, history, useTex=False):
+    def __init__(self, history, plotprefs=None):
 
-        if useTex:
-            plt.rcParams["text.usetex"] = True
+        if plotprefs is None:
+            self.plotprefs = PlotPreferences()
 
         else:
-            plt.rcParams["font.family"] = "serif"
+            self.plotprefs = plotprefs
 
-        if isinstance(history, analysis.utils.History):
-            self.history = history
-        elif isinstance(history, str):
-            self.history = History(filename=history)
+        self.history = load_history(history)
 
         box_edges = self.history.box_edges
 
-        self.fig = plt.figure()
+        self.fig = plt.figure(figsize=self.plotprefs.figsize, dpi=self.plotprefs.dpi)
 
         if self.history.dim == 2:
             self.ax = self.fig.add_subplot()
@@ -41,29 +38,30 @@ class TrajectoryPlotter:
         self.ax.set_xlim(box_edges[0,0], box_edges[0,1])
         self.ax.set_ylim(box_edges[1,0], box_edges[1,1])
 
-    def scatter(self, min_idx, max_idx, markersize=3):
+    def scatter(self, min_idx, max_idx):
 
         for i in range(self.history.n_atoms):
             trajectory = self.history.pos[min_idx:max_idx,i]
 
             if self.plot3D:
                 self.ax.scatter(trajectory[:,0], trajectory[:,1], trajectory[:,2], alpha=0.5,
-                                markersize=markersize)
+                                markersize=self.plotprefs.markersize)
 
             else:
-                self.ax.scatter(trajectory[:,0], trajectory[:,1], alpha=0.5, markersize=markersize)
+                self.ax.scatter(trajectory[:,0], trajectory[:,1], alpha=0.5, markersize=self.plotprefs.markersize)
 
-    def plot(self, min_idx, max_idx, markersize=3):
+    def plot(self, min_idx, max_idx):
 
         for i in range(self.history.n_atoms):
             trajectory = self.history.pos[min_idx:max_idx,i]
 
             if self.plot3D:
                 self.ax.plot(trajectory[:,0], trajectory[:,1], trajectory[:,2], alpha=0.3, marker="o",
-                             markersize=markersize)
+                             markersize=self.plotprefs.markersize)
 
             else:
-                self.ax.plot(trajectory[:,0], trajectory[:,1], alpha=0.3, marker="o", markersize=markersize)
+                self.ax.plot(trajectory[:,0], trajectory[:,1], alpha=0.3, marker="o",
+                             markersize=self.plotprefs.markersize)
 
     def show(self):
 

@@ -69,6 +69,21 @@ def LennardJonesForce(pos1, pos_others, soft_eps=0):
     return totalForce
 
 
+def LennardJonesPotential(pos1, pos_others):
+
+    distances = np.zeros(len(pos_others))
+
+    for i in range(len(pos_others)):
+        distances[i] = distanceFromPosition(pos1, pos_others[i])
+
+    termPauli = -distances**-6
+    termWaals = distances**-12
+
+    potential_terms = 4 * (termWaals + termPauli)
+    potential = np.sum(potential_terms)
+
+    return potential
+
 class UnitScaler:
     '''Scaler used for keeping track of units. Initialised with SI units.'''
 

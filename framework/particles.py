@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.stats import multivariate_normal
 import h5py
+from simulation.utils import LennardJonesPotential
 
 class Particles:
     '''Class for handling a set of n_atoms particles.'''
@@ -69,6 +70,24 @@ class Particles:
         kinetic_energy = 0.5 * np.sum(velsquared)
 
         return kinetic_energy
+
+
+    def potentialEnergy(self, box_length):
+
+        potential = np.zeros(self.n_atoms)
+
+        for i in range(self.n_atoms):
+            pos = self.positions[i]
+            pos_others = np.concatenate((self.positions[:i], self.positions[i+1:]))
+
+            # use the minimum image convention
+            pos_diff = pos_others - pos
+            pos_others = pos_others - box_length * np.rint(pos_diff/box_length)
+            potential[i] = LennardJonesPotential(pos, pos_others)
+
+        potential_energy = np.sum(potential)
+
+        return potential_energy
 
     def createFile(self, savefile):
         self.savefile = savefile
