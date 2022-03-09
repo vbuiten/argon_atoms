@@ -10,17 +10,17 @@ import numpy as np
 #savepath = "C:\\Users\\victo\\Documents\\Uni\\COP\\"
 savepath = "/net/vdesk/data2/buiten/COP/"
 
-box = BoxBase((20,20))
-atoms = Particles(2,2)
-atoms.positions = np.array([[6.,4.9], [14.,5.1]])
-atoms.velocities = np.array([[0.09,0], [-0.09,0.]])
+box = BoxBase((50,50))
+atoms = Particles(10,2)
+atoms.positions = box.edges
+atoms.velocities = 1.
 worker = NBodyWorker(atoms, box, timestep=0.01)
-worker.evolve(100, timestep_external=1., savefile=savepath+"collision-test.hdf")
+worker.evolve(100, timestep_external=1., savefile=savepath+"100-atoms-test.hdf")
 
-plotter = TrajectoryPlotter(savepath+"collision-test.hdf")
-plotter.plot(0,len(plotter.history.times)+1)
+plotter = TrajectoryPlotter(savepath+"100-atoms-test.hdf")
+plotter.plot(-10,len(plotter.history.times)+1)
 plotter.show()
 
-energy_plotter = EnergyPlotter(savepath+"collision-test.hdf")
+energy_plotter = EnergyPlotter(savepath+"100-atoms-test.hdf")
 energy_plotter.plotAll()
 energy_plotter.show()
