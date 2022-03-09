@@ -54,8 +54,8 @@ def LennardJonesForce(pos1, pos_others, eps=1., sigma=1., soft_eps=0):
     # array calculations for speed
     # these are all 1D arrays of length n_other_particles
     lengthFractions = sigma/distances
-    termPauli = 6 * (lengthFractions)**6
-    termWaals = -12 * (lengthFractions)**12
+    termPauli = -6 * (lengthFractions)**6
+    termWaals = 12 * (lengthFractions)**12
 
     # now compute the relative position vector x_i - x_j for each particle j
     # shape is (n_other_particles, dim)

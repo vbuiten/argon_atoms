@@ -11,10 +11,10 @@ savepath = "/net/vdesk/data2/buiten/COP/"
 
 box = BoxBase((100,100))
 atoms = Particles(2,2)
-atoms.positions = np.array([[30.,50], [60.,51.]])
-atoms.velocities = 1.e-3*np.array([[1.,0], [-1.,0.]])
-worker = NBodyWorker(atoms, box, timestep=0.0001)
-worker.evolve(500, timestep_external=10, savefile=savepath+"collision-test.hdf")
+atoms.positions = np.array([[40.,50], [60.,50.1]])
+atoms.velocities = 1.e-2*np.array([[1.,0], [-1.,0.]])
+worker = NBodyWorker(atoms, box, timestep=0.01)
+worker.evolve(1000, timestep_external=10, savefile=savepath+"collision-test.hdf")
 
 plotter = TrajectoryPlotter(savepath+"collision-test.hdf")
 plotter.plot(0,len(plotter.history.times)+1)
