@@ -10,9 +10,9 @@ import numpy as np
 savepath = "/net/vdesk/data2/buiten/COP/"
 
 box = BoxBase((20,20))
-atoms = Particles(2,2)
-atoms.positions = np.array([[6.,4.9], [14.,5.1]])
-atoms.velocities = np.array([[0.09,0], [-0.09,0.]])
+atoms = Particles(3,2)
+atoms.positions = np.array([[6.,4.9], [14.,5.1], [10.,10.]])
+atoms.velocities = np.array([[0.09,0], [-0.09,0.], [0.,-0.09]])
 worker = NBodyWorker(atoms, box, timestep=0.01)
 worker.evolve(100, timestep_external=1, savefile=savepath+"collision-test.hdf")
 

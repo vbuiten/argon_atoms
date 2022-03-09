@@ -7,7 +7,13 @@ import analysis.utils
 from analysis.utils import History
 
 class TrajectoryPlotter:
-    def __init__(self, history):
+    def __init__(self, history, useTex=False):
+
+        if useTex:
+            plt.rcParams["text.usetex"] = True
+
+        else:
+            plt.rcParams["font.family"] = "serif"
 
         if isinstance(history, analysis.utils.History):
             self.history = history
@@ -35,27 +41,29 @@ class TrajectoryPlotter:
         self.ax.set_xlim(box_edges[0,0], box_edges[0,1])
         self.ax.set_ylim(box_edges[1,0], box_edges[1,1])
 
-    def scatter(self, min_idx, max_idx):
+    def scatter(self, min_idx, max_idx, markersize=3):
 
         for i in range(self.history.n_atoms):
             trajectory = self.history.pos[min_idx:max_idx,i]
 
             if self.plot3D:
-                self.ax.scatter(trajectory[:,0], trajectory[:,1], trajectory[:,2], alpha=0.5)
+                self.ax.scatter(trajectory[:,0], trajectory[:,1], trajectory[:,2], alpha=0.5,
+                                markersize=markersize)
 
             else:
-                self.ax.scatter(trajectory[:,0], trajectory[:,1], alpha=0.5)
+                self.ax.scatter(trajectory[:,0], trajectory[:,1], alpha=0.5, markersize=markersize)
 
-    def plot(self, min_idx, max_idx):
+    def plot(self, min_idx, max_idx, markersize=3):
 
         for i in range(self.history.n_atoms):
             trajectory = self.history.pos[min_idx:max_idx,i]
 
             if self.plot3D:
-                self.ax.plot(trajectory[:,0], trajectory[:,1], trajectory[:,2], alpha=0.3, marker="o")
+                self.ax.plot(trajectory[:,0], trajectory[:,1], trajectory[:,2], alpha=0.3, marker="o",
+                             markersize=markersize)
 
             else:
-                self.ax.plot(trajectory[:,0], trajectory[:,1], alpha=0.3, marker="o")
+                self.ax.plot(trajectory[:,0], trajectory[:,1], alpha=0.3, marker="o", markersize=markersize)
 
     def show(self):
 
