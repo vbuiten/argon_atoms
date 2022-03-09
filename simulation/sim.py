@@ -39,6 +39,8 @@ class NBodyWorker:
 
 
     def evolve(self, t_end, savefile=None, timestep_external=1.):
+        '''TO DO: move integration algorithm to separate function.
+        This allows us to switch algorithm at will.'''
 
         times = np.arange(self.time, self.time+t_end, self.timestep)
         times_external = []
@@ -50,11 +52,16 @@ class NBodyWorker:
         kinetic_energy = []
         potential_energy = []
 
+        length = self.box.lengths[0]
+
+        # compute the "previous set" of positions (backward Euler)
+        pos_subtract = self.timestep * self.bodies.velocities
+        old_pos = (self.bodies.positions - pos_subtract + 2*length) % length
+
         for idx, time in enumerate(times):
 
             # first compute the force acting on each particle
             forces = np.zeros(self.bodies.velocities.shape)
-            length = self.box.lengths[0]
 
             for i in range(len(self.bodies)):
                 pos = self.bodies.positions[i]
@@ -71,11 +78,13 @@ class NBodyWorker:
             # now update the positions
             posadd = self.bodies.velocities * self.timestep
 
-            edges_cast = np.broadcast_to(self.box.edges, np.concatenate((posadd.shape, (2,))))
-            newpos = edges_cast[:,:,0] + (self.bodies.positions + posadd + 2*(edges_cast[:,:,1]-edges_cast[:,:,0])) % (edges_cast[:,:,1] - edges_cast[:,:,0])
+            #edges_cast = np.broadcast_to(self.box.edges, np.concatenate((posadd.shape, (2,))))
+            #newpos = edges_cast[:,:,0] + (self.bodies.positions + posadd + 2*(edges_cast[:,:,1]-edges_cast[:,:,0])) % (edges_cast[:,:,1] - edges_cast[:,:,0])
+            newpos = (2*self.bodies.positions - old_pos + self.timestep**2 * forces + 2*length) % length
 
             # and update the velocities
-            newvel = self.bodies.velocities + forces * self.timestep
+            #newvel = self.bodies.velocities + forces * self.timestep
+            newvel = (newpos - old_pos) / (2*self.timestep)
 
             self.bodies.positions = newpos
             self.bodies.velocities = newvel
