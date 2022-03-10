@@ -51,7 +51,7 @@ def minimumImageForces(positions, edges):
     return forces
 
 
-def LennardJonesForce(pos1, pos_others, soft_eps=0):
+def LennardJonesForce(pos1, pos_others, soft_eps=0.0001):
     '''
     Computes the dimensionless force acting on the particle with position 1 due to a Lennard-Jones potential
     caused by particles with dimensionless positions pos_others.
@@ -73,8 +73,8 @@ def LennardJonesForce(pos1, pos_others, soft_eps=0):
 
     # array calculations for speed
     # these are all 1D arrays of length n_other_particles
-    termPauli = -6 * (distances)**-6
-    termWaals = 12 * (distances)**-12
+    termPauli = -6 * (distances + soft_eps)**-6
+    termWaals = 12 * (distances + soft_eps)**-12
 
     # now compute the relative position vector x_i - x_j for each particle j
     # shape is (n_other_particles, dim)

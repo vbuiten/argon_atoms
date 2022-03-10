@@ -78,7 +78,8 @@ class Particles:
 
         for i in range(self.n_atoms):
             pos = self.positions[i]
-            pos_others = np.concatenate((self.positions[:i], self.positions[i+1:]))
+            # make sure not to count pairs twice
+            pos_others = self.positions[i+1:]
 
             # use the minimum image convention
             pos_diff = pos_others - pos
