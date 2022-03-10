@@ -7,11 +7,11 @@ from analysis.visualisation import TrajectoryPlotter
 from analysis.energies import EnergyPlotter
 import numpy as np
 
-#savepath = "C:\\Users\\victo\\Documents\\Uni\\COP\\"
-savepath = "/net/vdesk/data2/buiten/COP/"
+savepath = "C:\\Users\\victo\\Documents\\Uni\\COP\\"
+#savepath = "/net/vdesk/data2/buiten/COP/"
 
 box = BoxBase((50,50))
-atoms = Particles(10,2)
+atoms = Particles(50,2)
 atoms.positions = box.edges
 atoms.velocities = 1.
 worker = NBodyWorker(atoms, box, timestep=0.01)

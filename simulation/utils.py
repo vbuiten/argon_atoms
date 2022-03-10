@@ -26,8 +26,30 @@ def periodicCopies(positions, length):
 
     return copies
 
-# need a function for evaluating the gradient of the Lennard-Jones potential
-# also need some class for storing constants and physical units
+
+def posInBox(pos, edges):
+    '''Simple function for shifting a particle position inside the box.'''
+
+    lengths = edges[:,1] - edges[:,0]
+    pos = edges[:,0] + (pos + 2*lengths) % lengths
+    return pos
+
+
+def minimumImageForces(positions, edges):
+
+    forces = np.zeros(positions.shape)
+    lengths = edges[:,1] - edges[:,0]
+
+    for i in range(len(forces)):
+        pos = positions[i]
+        pos_others = np.concatenate((positions[:i], positions[i+1:]))
+
+        pos_diff = pos_others - pos
+        nearest_positions = pos_others - lengths * np.rint(pos_diff/lengths)
+        forces[i] = LennardJonesForce(pos, nearest_positions)
+
+    return forces
+
 
 def LennardJonesForce(pos1, pos_others, soft_eps=0):
     '''
