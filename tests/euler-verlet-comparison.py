@@ -11,15 +11,18 @@ savepath = "C:\\Users\\victo\\Documents\\Uni\\COP\\"
 #savepath = "/net/vdesk/data2/buiten/COP/"
 
 box = BoxBase((100,100))
-atoms = Particles(10,2)
+atoms = Particles(5,2)
 atoms.positions = box.edges
 atoms.temperature = 100
-print (atoms.velocities)
+print ("Initial velocities:", atoms.velocities)
 workerVerlet = NBodyWorker(atoms, box, timestep=0.01)
 workerVerlet.evolve(50, timestep_external=1., savefile=savepath+"verlet-test.hdf")
+print ("Velocities after integrating:", atoms.velocities)
+
 workerEuler = NBodyWorker(atoms, box, timestep=0.01)
 workerEuler.evolve(50, timestep_external=1., savefile=savepath+"euler-test.hdf",
                    method="Euler")
+
 
 plotterVerlet = TrajectoryPlotter(savepath+"verlet-test.hdf")
 plotterVerlet.plot(-3,len(plotterVerlet.history.times)+1)
