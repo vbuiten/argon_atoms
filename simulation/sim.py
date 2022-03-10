@@ -38,7 +38,7 @@ class NBodyWorker:
         print ("File created.")
 
 
-    def evolve(self, t_end, savefile=None, timestep_external=1.):
+    def evolve(self, t_end, savefile=None, timestep_external=1., method="Verlet"):
         '''TO DO: move integration algorithm to separate function.
         This allows us to switch algorithm at will.'''
 
@@ -54,23 +54,32 @@ class NBodyWorker:
 
         length = self.box.lengths[0]
 
-        # compute the "previous set" of positions (backward Euler)
-        pos_subtract = self.timestep * self.bodies.velocities
-        old_pos = (self.bodies.positions - pos_subtract + 2*length) % length
+        if method == "Verlet":
+            # compute the "previous set" of positions (backward Euler)
+            pos_subtract = self.timestep * self.bodies.velocities
+            old_pos = posInBox(self.bodies.positions - pos_subtract, self.box.edges)
 
         for idx, time in enumerate(times):
 
             # first compute the force acting on each particle
-
             forces = minimumImageForces(self.bodies.positions, self.box.edges)
 
-            # now update the positions
-            newpos = 2*self.bodies.positions - old_pos + self.timestep**2 * forces
-            newpos = posInBox(newpos, self.box.edges)
+            # update positions and velocities
+            # use the user-specified algorithm
+            if method == "Euler":
+                newpos = self.bodies.positions + self.timestep * self.bodies.velocities
+                newpos = posInBox(newpos, self.box.edges)
 
-            # and update the velocities
-            #newvel = self.bodies.velocities + forces * self.timestep
-            newvel = (newpos - old_pos) / (2*self.timestep)
+                newvel = self.bodies.velocities + self.timestep * forces
+
+            elif method == "Verlet":
+                newpos = 2*self.bodies.positions - old_pos + self.timestep**2 * forces
+                newpos = posInBox(newpos, self.box.edges)
+
+                newvel = (newpos - old_pos) / (2*self.timestep)
+
+            else:
+                raise ValueError("Invalid integration method given. Use 'Euler' or 'Verlet'.")
 
             self.bodies.positions = newpos
             self.bodies.velocities = newvel

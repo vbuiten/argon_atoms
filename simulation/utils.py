@@ -91,15 +91,15 @@ def LennardJonesForce(pos1, pos_others, soft_eps=0.0001):
     return totalForce
 
 
-def LennardJonesPotential(pos1, pos_others):
+def LennardJonesPotential(pos1, pos_others, soft_eps=0.0001):
 
     distances = np.zeros(len(pos_others))
 
     for i in range(len(pos_others)):
         distances[i] = distanceFromPosition(pos1, pos_others[i])
 
-    termPauli = -distances**-6
-    termWaals = distances**-12
+    termPauli = -(distances + soft_eps)**-6
+    termWaals = (distances + soft_eps)**-12
 
     potential_terms = 4 * (termWaals + termPauli)
     potential = np.sum(potential_terms)
