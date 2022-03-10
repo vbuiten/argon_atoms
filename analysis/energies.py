@@ -32,6 +32,8 @@ class EnergyPlotter:
         self.ax.set_xlabel("Time (s)")
         self.ax.set_ylabel("Energy (J)")
 
+        self.ax.set_yscale("log")
+
 
     def plotKinetic(self, alpha=0.7):
 
