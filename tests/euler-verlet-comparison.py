@@ -10,10 +10,11 @@ import numpy as np
 savepath = "C:\\Users\\victo\\Documents\\Uni\\COP\\"
 #savepath = "/net/vdesk/data2/buiten/COP/"
 
-box = BoxBase((10,10))
+box = BoxBase((100,100))
 atoms = Particles(10,2)
 atoms.positions = box.edges
-atoms.velocities = 1.
+atoms.temperature = 100
+print (atoms.velocities)
 workerVerlet = NBodyWorker(atoms, box, timestep=0.01)
 workerVerlet.evolve(50, timestep_external=1., savefile=savepath+"verlet-test.hdf")
 workerEuler = NBodyWorker(atoms, box, timestep=0.01)

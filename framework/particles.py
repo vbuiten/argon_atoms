@@ -1,14 +1,21 @@
 import numpy as np
 from scipy.stats import multivariate_normal
 import h5py
-from simulation.utils import LennardJonesPotential
+from simulation.utils import LennardJonesPotential, UnitScaler
 
 class Particles:
     '''Class for handling a set of n_atoms particles.'''
-    def __init__(self, n_atoms, dim, mass=1.):
+    def __init__(self, n_atoms, dim, mass=1., unitscaler=None):
         self.n_atoms = n_atoms
         self.dim = dim
         self.mass = mass
+
+        if unitscaler is None:
+            self.unitscaler = UnitScaler()
+        elif isinstance(unitscaler, UnitScaler):
+            self.unitscaler = unitscaler
+        else:
+            raise TypeError("Invalid unitscaler given.")
 
         self.savefile = None
 
@@ -58,6 +65,23 @@ class Particles:
             cov = np.diag(vel * np.ones(self.dim))
             gauss = multivariate_normal(mean=mean, cov=cov)
             self._velocities = gauss.rvs(size=(self.n_atoms))
+
+
+    @property
+    def temperature(self):
+        return self._temperature
+
+    @temperature.setter
+    def temperature(self, temp):
+        '''Draws random particle velocities using the given real temperature in K.'''
+
+        self._temperature = temp
+        self.dimlessTemp = self.unitscaler.toDimlessTemperature(temp)
+        mean = np.zeros(self.dim)
+        cov = np.diag(np.sqrt(self.dimlessTemp) * np.ones(self.dim))
+        print (cov)
+        gauss = multivariate_normal(mean=mean, cov=cov)
+        self._velocities = gauss.rvs(size=(self.n_atoms))
 
 
     def kineticEnergy(self):

@@ -146,6 +146,9 @@ class UnitScaler:
     def toJoule(self, dimless_energy):
         return self.energy_scale * dimless_energy
 
+    def toDimlessTemperature(self, kelvin):
+        return self.k_boltzmann * kelvin / self.energy_scale
+
     def toKelvin(self, dimless_energy):
         return self.toJoule(dimless_energy) / self.k_boltzmann
 
