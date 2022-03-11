@@ -121,6 +121,12 @@ class UnitScaler:
     def toDimlessLength(self, meters):
         return meters / self.length_scale
 
+    def toCubicMeters(self, dimless_volume):
+        return self.length_scale**3 * dimless_volume
+
+    def toDimlessVolume(self, cubic_meters):
+        return cubic_meters / self.length_scale**3
+
     def toSeconds(self, dimless_time):
         factor = np.sqrt(self.mass_scale*self.length_scale**2 / self.energy_scale)
         return factor * dimless_time
@@ -160,3 +166,9 @@ class UnitScaler:
 
     def toDimlessForce(self, newton):
         return self.energy_scale / self.length_scale**2 * newton
+
+    def toKilogramPerCubicMeter(self, dimless_density):
+        return (self.mass_scale / self.length_scale**3) * dimless_density
+
+    def toDimlessDensity(self, kg_per_m3):
+        return (self.length_scale**3 / self.mass_scale) * kg_per_m3
