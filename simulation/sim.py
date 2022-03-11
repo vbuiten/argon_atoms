@@ -38,9 +38,35 @@ class NBodyWorker:
         print ("File created.")
 
 
+    def equilibriate(self, iterations=5, iteration_time=10, threshold=1.e-5):
+
+        target_kinetic_energy = (self.bodies.dim/2) * (self.bodies.n_atoms - 1) * self.bodies.dimlessTemp
+        fractional_deviation = 10*threshold
+
+        #while np.abs(fractional_deviation) > threshold:
+        for i in range(iterations):
+
+            # run the simulation for a time iteration_time
+            self.evolve(self.time+iteration_time)
+
+            # measure the kinetic energy in the system
+            real_kinetic_energy = self.bodies.kineticEnergy()
+            vel_scale_factor = np.sqrt(target_kinetic_energy / real_kinetic_energy)
+            fractional_deviation = (target_kinetic_energy/real_kinetic_energy) - 1
+
+            # rescale the velocities
+            self.bodies.velocities = vel_scale_factor * self.bodies.velocities
+
+        real_kinetic_energy = self.bodies.kineticEnergy()
+        kinetic_energy_fraction = target_kinetic_energy / real_kinetic_energy
+
+        print ("Equilibriation complete.")
+        print ("target E_kin / real E_kin =", kinetic_energy_fraction)
+
+        self.time = 0
+
+
     def evolve(self, t_end, savefile=None, timestep_external=1., method="Verlet"):
-        '''TO DO: move integration algorithm to separate function.
-        This allows us to switch algorithm at will.'''
 
         times = np.arange(self.time, self.time+t_end, self.timestep)
         times_external = []
