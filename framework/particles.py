@@ -72,16 +72,19 @@ class Particles:
         return self._temperature
 
     @temperature.setter
-    def temperature(self, temp):
+    def temperature(self, dimlessTemp):
         '''Draws random particle velocities using the given real temperature in K.'''
 
-        self._temperature = temp
-        self.dimlessTemp = self.unitscaler.toDimlessTemperature(temp)
+        #self._temperature = temp
+        #self.dimlessTemp = self.unitscaler.toDimlessTemperature(temp)
+        self.dimlessTemp = dimlessTemp
         mean = np.zeros(self.dim)
         cov = np.diag(np.sqrt(self.dimlessTemp) * np.ones(self.dim))
         print (cov)
         gauss = multivariate_normal(mean=mean, cov=cov)
         self._velocities = gauss.rvs(size=(self.n_atoms))
+
+        self._temperature = self.unitscaler.toKelvinFromDimlessTemperature(self.dimlessTemp)
 
 
     def kineticEnergy(self):

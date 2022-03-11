@@ -155,7 +155,10 @@ class UnitScaler:
     def toDimlessTemperature(self, kelvin):
         return self.k_boltzmann * kelvin / self.energy_scale
 
-    def toKelvin(self, dimless_energy):
+    def toKelvinFromDimlessTemperature(self, dimless_temperature):
+        return (self.energy_scale * self.k_boltzmann) * dimless_temperature
+
+    def toKelvinFromDimlessEnergy(self, dimless_energy):
         return self.toJoule(dimless_energy) / self.k_boltzmann
 
     def toDimlessEnergy(self, joules):

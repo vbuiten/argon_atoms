@@ -10,10 +10,12 @@ import numpy as np
 savepath = "C:\\Users\\victo\\Documents\\Uni\\COP\\"
 #savepath = "/net/vdesk/data2/buiten/COP/"
 
-box = BoxBase(0.3, 5, 3)
-atoms = Particles(5,3)
+n_atoms = 10
+
+box = BoxBase(0.3, n_atoms, 3)
+atoms = Particles(n_atoms,3)
 atoms.positions = box.edges
-atoms.temperature = 100
+atoms.temperature = 3.0
 print ("Initial velocities:", atoms.velocities)
 workerVerlet = NBodyWorker(atoms, box, timestep=0.01)
 workerVerlet.evolve(50, timestep_external=1., savefile=savepath+"verlet-test.hdf")
