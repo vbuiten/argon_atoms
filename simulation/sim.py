@@ -1,7 +1,7 @@
 '''Module containing the simulation worker class.'''
 
 import numpy as np
-from simulation.utils import LennardJonesForce
+from simulation.utils import LennardJonesForce, posInBox, minimumImageForces
 import h5py
 
 class NBodyWorker:
@@ -38,7 +38,7 @@ class NBodyWorker:
         print ("File created.")
 
 
-    def evolve(self, t_end, savefile=None, timestep_external=1.):
+    def evolve(self, t_end, savefile=None, timestep_external=1., method="Verlet"):
         '''TO DO: move integration algorithm to separate function.
         This allows us to switch algorithm at will.'''
 
@@ -54,37 +54,32 @@ class NBodyWorker:
 
         length = self.box.lengths[0]
 
-        # compute the "previous set" of positions (backward Euler)
-        pos_subtract = self.timestep * self.bodies.velocities
-        old_pos = (self.bodies.positions - pos_subtract + 2*length) % length
+        if method == "Verlet":
+            # compute the "previous set" of positions (backward Euler)
+            pos_subtract = self.timestep * self.bodies.velocities
+            old_pos = posInBox(self.bodies.positions - pos_subtract, self.box.edges)
 
         for idx, time in enumerate(times):
 
             # first compute the force acting on each particle
-            forces = np.zeros(self.bodies.velocities.shape)
+            forces = minimumImageForces(self.bodies.positions, self.box.edges)
 
-            for i in range(len(self.bodies)):
-                pos = self.bodies.positions[i]
-                pos_others = np.concatenate((self.bodies.positions[:i], self.bodies.positions[i + 1:]))
+            # update positions and velocities
+            # use the user-specified algorithm
+            if method == "Euler":
+                newpos = self.bodies.positions + self.timestep * self.bodies.velocities
+                newpos = posInBox(newpos, self.box.edges)
 
-                # implement the minimum image convention
-                # we use a rectangular/cubic box
-                # because the framework is rectangular/cubic
-                pos_diff = pos_others - pos
-                #pos_others = (pos - pos_others + length/2) % length - length/2
-                pos_others = pos_others - length * np.rint(pos_diff/length)
-                forces[i] = LennardJonesForce(pos, pos_others)
+                newvel = self.bodies.velocities + self.timestep * forces
 
-            # now update the positions
-            posadd = self.bodies.velocities * self.timestep
+            elif method == "Verlet":
+                newpos = 2*self.bodies.positions - old_pos + self.timestep**2 * forces
+                newpos = posInBox(newpos, self.box.edges)
 
-            #edges_cast = np.broadcast_to(self.box.edges, np.concatenate((posadd.shape, (2,))))
-            #newpos = edges_cast[:,:,0] + (self.bodies.positions + posadd + 2*(edges_cast[:,:,1]-edges_cast[:,:,0])) % (edges_cast[:,:,1] - edges_cast[:,:,0])
-            newpos = (2*self.bodies.positions - old_pos + self.timestep**2 * forces + 2*length) % length
+                newvel = (newpos - old_pos) / (2*self.timestep)
 
-            # and update the velocities
-            #newvel = self.bodies.velocities + forces * self.timestep
-            newvel = (newpos - old_pos) / (2*self.timestep)
+            else:
+                raise ValueError("Invalid integration method given. Use 'Euler' or 'Verlet'.")
 
             self.bodies.positions = newpos
             self.bodies.velocities = newvel

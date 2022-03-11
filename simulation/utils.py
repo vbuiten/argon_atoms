@@ -26,10 +26,32 @@ def periodicCopies(positions, length):
 
     return copies
 
-# need a function for evaluating the gradient of the Lennard-Jones potential
-# also need some class for storing constants and physical units
 
-def LennardJonesForce(pos1, pos_others, soft_eps=0):
+def posInBox(pos, edges):
+    '''Simple function for shifting a particle position inside the box.'''
+
+    lengths = edges[:,1] - edges[:,0]
+    pos = edges[:,0] + (pos + 2*lengths) % lengths
+    return pos
+
+
+def minimumImageForces(positions, edges):
+
+    forces = np.zeros(positions.shape)
+    lengths = edges[:,1] - edges[:,0]
+
+    for i in range(len(forces)):
+        pos = positions[i]
+        pos_others = np.concatenate((positions[:i], positions[i+1:]))
+
+        pos_diff = pos_others - pos
+        nearest_positions = pos_others - lengths * np.rint(pos_diff/lengths)
+        forces[i] = LennardJonesForce(pos, nearest_positions)
+
+    return forces
+
+
+def LennardJonesForce(pos1, pos_others, soft_eps=0.0001):
     '''
     Computes the dimensionless force acting on the particle with position 1 due to a Lennard-Jones potential
     caused by particles with dimensionless positions pos_others.
@@ -51,8 +73,8 @@ def LennardJonesForce(pos1, pos_others, soft_eps=0):
 
     # array calculations for speed
     # these are all 1D arrays of length n_other_particles
-    termPauli = -6 * (distances)**-6
-    termWaals = 12 * (distances)**-12
+    termPauli = -6 * (distances + soft_eps)**-6
+    termWaals = 12 * (distances + soft_eps)**-12
 
     # now compute the relative position vector x_i - x_j for each particle j
     # shape is (n_other_particles, dim)
@@ -69,15 +91,15 @@ def LennardJonesForce(pos1, pos_others, soft_eps=0):
     return totalForce
 
 
-def LennardJonesPotential(pos1, pos_others):
+def LennardJonesPotential(pos1, pos_others, soft_eps=0.0001):
 
     distances = np.zeros(len(pos_others))
 
     for i in range(len(pos_others)):
         distances[i] = distanceFromPosition(pos1, pos_others[i])
 
-    termPauli = -distances**-6
-    termWaals = distances**-12
+    termPauli = -(distances + soft_eps)**-6
+    termWaals = (distances + soft_eps)**-12
 
     potential_terms = 4 * (termWaals + termPauli)
     potential = np.sum(potential_terms)
@@ -123,6 +145,9 @@ class UnitScaler:
 
     def toJoule(self, dimless_energy):
         return self.energy_scale * dimless_energy
+
+    def toDimlessTemperature(self, kelvin):
+        return self.k_boltzmann * kelvin / self.energy_scale
 
     def toKelvin(self, dimless_energy):
         return self.toJoule(dimless_energy) / self.k_boltzmann

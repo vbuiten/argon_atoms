@@ -56,11 +56,15 @@ class TrajectoryPlotter:
             trajectory = self.history.pos[min_idx:max_idx,i]
 
             if self.plot3D:
-                self.ax.plot(trajectory[:,0], trajectory[:,1], trajectory[:,2], alpha=0.3, marker="o",
+                self.ax.plot(trajectory[:,0], trajectory[:,1], trajectory[:,2], alpha=0.3, marker=".",
+                             markersize=self.plotprefs.markersize, color="tab:blue")
+                self.ax.plot(trajectory[-1,0], trajectory[-1,1], trajectory[-1,2], alpha=0.5, marker="o",
                              markersize=self.plotprefs.markersize)
 
             else:
-                self.ax.plot(trajectory[:,0], trajectory[:,1], alpha=0.3, marker="o",
+                self.ax.plot(trajectory[:,0], trajectory[:,1], alpha=0.3, marker=".",
+                             markersize=self.plotprefs.markersize, color="tab:blue")
+                self.ax.plot(trajectory[-1, 0], trajectory[-1, 1], alpha=0.5, marker="o",
                              markersize=self.plotprefs.markersize)
 
     def show(self):
