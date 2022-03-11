@@ -10,8 +10,8 @@ import numpy as np
 savepath = "C:\\Users\\victo\\Documents\\Uni\\COP\\"
 #savepath = "/net/vdesk/data2/buiten/COP/"
 
-box = BoxBase((100,100))
-atoms = Particles(5,2)
+box = BoxBase(0.3, 5, 3)
+atoms = Particles(5,3)
 atoms.positions = box.edges
 atoms.temperature = 100
 print ("Initial velocities:", atoms.velocities)

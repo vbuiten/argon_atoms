@@ -10,7 +10,7 @@ import numpy as np
 savepath = "C:\\Users\\victo\\Documents\\Uni\\COP\\"
 #savepath = "/net/vdesk/data2/buiten/COP/"
 
-box = BoxBase((100,100))
+box = BoxBase(0.3, 2, 2)
 atoms = Particles(2,2)
 atoms.positions = np.array([[2.,4.9], [18.,5.1]])
 atoms.velocities = np.array([[0.09,0], [-0.09,0.]])

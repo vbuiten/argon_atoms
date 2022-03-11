@@ -24,16 +24,17 @@ class TrajectoryPlotter:
         if self.history.dim == 2:
             self.ax = self.fig.add_subplot()
             self.plot3D = False
+            self.ax.set_aspect("equal")
 
         elif self.history.dim == 3:
             self.ax = self.fig.add_subplot(projection="3d")
             self.ax.set_zlabel("z")
             self.ax.set_zlim(box_edges[2,0], box_edges[2,1])
             self.plot3D = True
+            self.ax.set_aspect("auto")
 
         self.ax.set_xlabel("x")
         self.ax.set_ylabel("y")
-        self.ax.set_aspect("equal")
 
         self.ax.set_xlim(box_edges[0,0], box_edges[0,1])
         self.ax.set_ylim(box_edges[1,0], box_edges[1,1])
