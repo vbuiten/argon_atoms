@@ -46,10 +46,10 @@ class TrajectoryPlotter:
 
             if self.plot3D:
                 self.ax.scatter(trajectory[:,0], trajectory[:,1], trajectory[:,2], alpha=0.5,
-                                markersize=self.plotprefs.markersize)
+                                s=self.plotprefs.markersize)
 
             else:
-                self.ax.scatter(trajectory[:,0], trajectory[:,1], alpha=0.5, markersize=self.plotprefs.markersize)
+                self.ax.scatter(trajectory[:,0], trajectory[:,1], alpha=0.5, s=self.plotprefs.markersize)
 
     def plot(self, min_idx, max_idx):
 

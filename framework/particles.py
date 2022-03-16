@@ -50,14 +50,14 @@ class Particles:
 
     @velocities.setter
     def velocities(self, vel):
-        try:
+        if isinstance(vel, np.ndarray):
             if vel.shape == (self.n_atoms, self.dim):
                 self._velocities = vel
 
             else:
                 print ("Given velocities have incorrent dimensions.")
 
-        except:
+        else:
             # the user will give a standard deviation for the gaussian
             # generate random positions from a gaussian
             # we'll probably want to change this to a Maxwell-Boltzmann distribution
@@ -78,11 +78,7 @@ class Particles:
         #self._temperature = temp
         #self.dimlessTemp = self.unitscaler.toDimlessTemperature(temp)
         self.dimlessTemp = dimlessTemp
-        mean = np.zeros(self.dim)
-        cov = np.diag(np.sqrt(self.dimlessTemp) * np.ones(self.dim))
-        print (cov)
-        gauss = multivariate_normal(mean=mean, cov=cov)
-        self._velocities = gauss.rvs(size=(self.n_atoms))
+        self.velocities = np.sqrt(self.dimlessTemp)
 
         self._temperature = self.unitscaler.toKelvinFromDimlessTemperature(self.dimlessTemp)
 

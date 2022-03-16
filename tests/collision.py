@@ -7,18 +7,21 @@ from analysis.visualisation import TrajectoryPlotter
 from analysis.energies import EnergyPlotter
 import numpy as np
 
-savepath = "C:\\Users\\victo\\Documents\\Uni\\COP\\"
-#savepath = "/net/vdesk/data2/buiten/COP/"
+#savepath = "C:\\Users\\victo\\Documents\\Uni\\COP\\"
+savepath = "/net/vdesk/data2/buiten/COP/"
 
-box = BoxBase(0.3, 2, 2)
+dt = 0.00001
+speed = 1e-5
+
+box = BoxBase(1e-4, 2, 2)
 atoms = Particles(2,2)
-atoms.positions = np.array([[2.,4.9], [18.,5.1]])
-atoms.velocities = np.array([[0.09,0], [-0.09,0.]])
-worker = NBodyWorker(atoms, box, timestep=0.01)
-worker.evolve(10, timestep_external=0.1, savefile=savepath+"collision-test.hdf")
+atoms.positions = np.array([[2.,70.0], [138.,71.]])
+atoms.velocities = np.array([[speed,0.], [-speed,0.]])
+worker = NBodyWorker(atoms, box, timestep=dt)
+worker.evolve(0.01, timestep_external=dt, savefile=savepath+"collision-test.hdf")
 
 plotter = TrajectoryPlotter(savepath+"collision-test.hdf")
-plotter.plot(0,len(plotter.history.times)+1)
+plotter.scatter(0,len(plotter.history.times)+1)
 plotter.show()
 
 energy_plotter = EnergyPlotter(savepath+"collision-test.hdf")

@@ -5,7 +5,7 @@ from simulation.utils import LennardJonesForce, posInBox, minimumImageForces
 import h5py
 
 class NBodyWorker:
-    def __init__(self, bodies, box, timestep=0.1):
+    def __init__(self, bodies, box, timestep=0.1, method="Verlet"):
 
         # check if box and bodies have the same dimensions
         if box.dim != bodies.dim:
@@ -15,6 +15,7 @@ class NBodyWorker:
         self.box = box
         self.time = 0
         self.timestep = timestep
+        self.method = method
 
 
     def saveToFile(self, savefile, times):
@@ -38,35 +39,84 @@ class NBodyWorker:
         print ("File created.")
 
 
-    def equilibriate(self, iterations=5, iteration_time=10, threshold=1.e-5):
+    def equilibriate(self, iterations=50, iteration_time=10., threshold=1.e-2):
 
         target_kinetic_energy = (self.bodies.dim/2) * (self.bodies.n_atoms - 1) * self.bodies.dimlessTemp
-        fractional_deviation = 10*threshold
+
+        times = np.arange(0., iteration_time, self.timestep)
+        length = self.box.lengths[0]
+
+        # save the energy fractions for each iteration
+        energy_fractions = []
+
+        fractional_deviation = np.inf
 
         #while np.abs(fractional_deviation) > threshold:
         for i in range(iterations):
 
             # run the simulation for a time iteration_time
-            self.evolve(self.time+iteration_time)
 
-            # measure the kinetic energy in the system
+            if self.method == "Verlet":
+                # compute the "previous set" of positions (backward Euler)
+                pos_subtract = self.timestep * self.bodies.velocities
+                old_pos = posInBox(self.bodies.positions - pos_subtract, self.box.edges)
+
+            for idx, time in enumerate(times):
+
+                # first compute the force acting on each particle
+                forces = minimumImageForces(self.bodies.positions, self.box.edges)
+
+                # update positions and velocities
+                # use the user-specified algorithm
+                if self.method == "Euler":
+                    newpos = self.bodies.positions + self.timestep * self.bodies.velocities
+                    newpos = posInBox(newpos, self.box.edges)
+
+                    newvel = self.bodies.velocities + self.timestep * forces
+
+                elif self.method == "Verlet":
+                    newpos = 2 * self.bodies.positions - old_pos + self.timestep ** 2 * forces
+                    newpos = posInBox(newpos, self.box.edges)
+
+                    newvel = (newpos - old_pos) / (2 * self.timestep)
+
+                else:
+                    raise ValueError("Invalid integration method given. Use 'Euler' or 'Verlet'.")
+
+                self.bodies.positions = newpos
+                self.bodies.velocities = newvel
+
+            #self.evolve(self.time+iteration_time)
+            #self.evolve(iteration_time)
+
+            # measure the new kinetic energy after evolving
             real_kinetic_energy = self.bodies.kineticEnergy()
-            vel_scale_factor = np.sqrt(target_kinetic_energy / real_kinetic_energy)
-            fractional_deviation = (target_kinetic_energy/real_kinetic_energy) - 1
+            energy_fraction = target_kinetic_energy / real_kinetic_energy
+            fractional_deviation = energy_fraction - 1
 
-            # rescale the velocities
-            self.bodies.velocities = vel_scale_factor * self.bodies.velocities
+            energy_fractions.append(energy_fraction)
+            print("target E_kin / real E_kin =", energy_fraction)
+            #print("target E_kin / real E_kin - 1 =", fractional_deviation)
 
-        real_kinetic_energy = self.bodies.kineticEnergy()
-        kinetic_energy_fraction = target_kinetic_energy / real_kinetic_energy
+            if np.abs(fractional_deviation) > threshold:
+                vel_scale_factor = np.sqrt(energy_fraction)
+
+                #print ("Scale factor:", vel_scale_factor)
+
+                # rescale the velocities
+                newvel = vel_scale_factor * self.bodies.velocities
+                self.bodies.velocities = newvel
+
+                print ("Rescaled velocities.")
+
 
         print ("Equilibriation complete.")
-        print ("target E_kin / real E_kin =", kinetic_energy_fraction)
 
-        self.time = 0
+        #self.time = 0
+        return energy_fractions
 
 
-    def evolve(self, t_end, savefile=None, timestep_external=1., method="Verlet"):
+    def evolve(self, t_end, savefile=None, timestep_external=1.):
 
         times = np.arange(self.time, self.time+t_end, self.timestep)
         times_external = []
@@ -80,25 +130,38 @@ class NBodyWorker:
 
         length = self.box.lengths[0]
 
-        if method == "Verlet":
+        if self.method == "Verlet":
             # compute the "previous set" of positions (backward Euler)
             pos_subtract = self.timestep * self.bodies.velocities
             old_pos = posInBox(self.bodies.positions - pos_subtract, self.box.edges)
 
         for idx, time in enumerate(times):
 
+            # save the current state of the system
+            if (time - self.time)/timestep_external % 1 == 0:
+                times_external.append(time)
+                print ("Time:", time)
+                #print ("Forces:", forces)
+                pos_history.append(self.bodies.positions)
+                vel_history.append(self.bodies.velocities)
+                kinetic_energy.append(self.bodies.kineticEnergy())
+
+                # computationally expensive potential energy calculation
+                potential_energy.append(self.bodies.potentialEnergy(length))
+
+            # now evolve the system to the next step
             # first compute the force acting on each particle
             forces = minimumImageForces(self.bodies.positions, self.box.edges)
 
             # update positions and velocities
             # use the user-specified algorithm
-            if method == "Euler":
+            if self.method == "Euler":
                 newpos = self.bodies.positions + self.timestep * self.bodies.velocities
                 newpos = posInBox(newpos, self.box.edges)
 
                 newvel = self.bodies.velocities + self.timestep * forces
 
-            elif method == "Verlet":
+            elif self.method == "Verlet":
                 newpos = 2*self.bodies.positions - old_pos + self.timestep**2 * forces
                 newpos = posInBox(newpos, self.box.edges)
 
@@ -110,18 +173,9 @@ class NBodyWorker:
             self.bodies.positions = newpos
             self.bodies.velocities = newvel
 
-            if time % timestep_external == 0:
-                times_external.append(time)
-                print ("Time:", time)
-                #print ("Forces:", forces)
-                pos_history.append(self.bodies.positions)
-                vel_history.append(self.bodies.velocities)
-                kinetic_energy.append(self.bodies.kineticEnergy())
 
-                # computationally expensive potential energy calculation
-                potential_energy.append(self.bodies.potentialEnergy(length))
 
-        # placeholder total energy
+        # total energy
         total_energy = np.array(kinetic_energy) + np.array(potential_energy)
 
         pos_history = np.array(pos_history)
@@ -142,3 +196,5 @@ class NBodyWorker:
             self.saveToFile(savefile, times_external)
 
         print ("Simulation finished.")
+        #print ("Internal times:", times)
+        #print ("External times:", times_external)
