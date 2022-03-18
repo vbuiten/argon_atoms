@@ -53,6 +53,7 @@ class Particles:
         if isinstance(vel, np.ndarray):
             if vel.shape == (self.n_atoms, self.dim):
                 self._velocities = vel
+                #print ("Velocities set.")
 
             else:
                 print ("Given velocities have incorrent dimensions.")

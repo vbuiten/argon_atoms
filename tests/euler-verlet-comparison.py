@@ -12,18 +12,15 @@ savepath = "C:\\Users\\victo\\Documents\\Uni\\COP\\"
 
 n_atoms = 10
 
-box = BoxBase(0.3, n_atoms, 3)
+box = BoxBase(0.1, n_atoms, 3)
 atoms = Particles(n_atoms,3)
 atoms.positions = box.edges
 atoms.temperature = 3.0
-print ("Initial velocities:", atoms.velocities)
-workerVerlet = NBodyWorker(atoms, box, timestep=0.01)
+workerVerlet = NBodyWorker(atoms, box, timestep=0.01, minimage=True)
 workerVerlet.evolve(50, timestep_external=1., savefile=savepath+"verlet-test.hdf")
-print ("Velocities after integrating:", atoms.velocities)
 
-workerEuler = NBodyWorker(atoms, box, timestep=0.01)
-workerEuler.evolve(50, timestep_external=1., savefile=savepath+"euler-test.hdf",
-                   method="Euler")
+workerEuler = NBodyWorker(atoms, box, timestep=0.01, method="Euler")
+workerEuler.evolve(50, timestep_external=1., savefile=savepath+"euler-test.hdf")
 
 
 plotterVerlet = TrajectoryPlotter(savepath+"verlet-test.hdf")

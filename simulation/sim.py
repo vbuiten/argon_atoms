@@ -5,7 +5,7 @@ from simulation.utils import LennardJonesForce, posInBox, minimumImageForces
 import h5py
 
 class NBodyWorker:
-    def __init__(self, bodies, box, timestep=0.1, method="Verlet"):
+    def __init__(self, bodies, box, timestep=0.1, method="Verlet", minimage=True):
 
         # check if box and bodies have the same dimensions
         if box.dim != bodies.dim:
@@ -16,6 +16,7 @@ class NBodyWorker:
         self.time = 0
         self.timestep = timestep
         self.method = method
+        self.minimage = minimage
 
 
     def saveToFile(self, savefile, times):
@@ -39,7 +40,7 @@ class NBodyWorker:
         print ("File created.")
 
 
-    def equilibriate(self, iterations=50, iteration_time=10., threshold=1.e-2):
+    def equilibriate(self, iterations=50, iteration_time=100., threshold=1.e-2):
 
         target_kinetic_energy = (self.bodies.dim/2) * (self.bodies.n_atoms - 1) * self.bodies.dimlessTemp
 
@@ -49,6 +50,10 @@ class NBodyWorker:
         # save the energy fractions for each iteration
         energy_fractions = []
 
+        # use Euler integration backwards for the positions at t = -1
+        if self.method == "Verlet":
+            old_pos = posInBox(self.bodies.positions - self.timestep * self.bodies.velocities, self.box.lengths)
+
         fractional_deviation = np.inf
 
         #while np.abs(fractional_deviation) > threshold:
@@ -56,29 +61,34 @@ class NBodyWorker:
 
             # run the simulation for a time iteration_time
 
-            if self.method == "Verlet":
-                # compute the "previous set" of positions (backward Euler)
-                pos_subtract = self.timestep * self.bodies.velocities
-                old_pos = posInBox(self.bodies.positions - pos_subtract, self.box.edges)
-
             for idx, time in enumerate(times):
 
-                # first compute the force acting on each particle
-                forces = minimumImageForces(self.bodies.positions, self.box.edges)
+                if self.minimage:
+                    # first compute the force acting on each particle
+                    forces = minimumImageForces(self.bodies.positions, self.box.lengths)
+
+                else:
+                    forces = np.zeros(self.bodies.positions.shape)
+                    for i in range(len(forces)):
+                        pos = self.bodies.positions[i]
+                        pos_others = np.concatenate((self.bodies.positions[:i], self.bodies.positions[i + 1:]))
+                        forces[i] = LennardJonesForce(pos, pos_others)
 
                 # update positions and velocities
                 # use the user-specified algorithm
                 if self.method == "Euler":
                     newpos = self.bodies.positions + self.timestep * self.bodies.velocities
-                    newpos = posInBox(newpos, self.box.edges)
+                    newpos = posInBox(newpos, self.box.lengths)
 
                     newvel = self.bodies.velocities + self.timestep * forces
 
                 elif self.method == "Verlet":
                     newpos = 2 * self.bodies.positions - old_pos + self.timestep ** 2 * forces
-                    newpos = posInBox(newpos, self.box.edges)
+                    newpos = posInBox(newpos, self.box.lengths)
 
                     newvel = (newpos - old_pos) / (2 * self.timestep)
+
+                    old_pos = self.bodies.positions
 
                 else:
                     raise ValueError("Invalid integration method given. Use 'Euler' or 'Verlet'.")
@@ -128,12 +138,12 @@ class NBodyWorker:
         kinetic_energy = []
         potential_energy = []
 
-        length = self.box.lengths[0]
+        length = self.box.length
 
         if self.method == "Verlet":
             # compute the "previous set" of positions (backward Euler)
             pos_subtract = self.timestep * self.bodies.velocities
-            old_pos = posInBox(self.bodies.positions - pos_subtract, self.box.edges)
+            old_pos = posInBox(self.bodies.positions - pos_subtract, self.box.lengths)
 
         for idx, time in enumerate(times):
 
@@ -150,30 +160,41 @@ class NBodyWorker:
                 potential_energy.append(self.bodies.potentialEnergy(length))
 
             # now evolve the system to the next step
-            # first compute the force acting on each particle
-            forces = minimumImageForces(self.bodies.positions, self.box.edges)
+
+            if self.minimage:
+                # first compute the force acting on each particle
+                forces = minimumImageForces(self.bodies.positions, self.box.lengths)
+
+            else:
+                # compute forces without minimum image convention
+                forces = np.zeros(self.bodies.positions.shape)
+                for i in range(len(forces)):
+                    pos = self.bodies.positions[i]
+                    pos_others = np.concatenate((self.bodies.positions[:i], self.bodies.positions[i+1:]))
+                    forces[i] = LennardJonesForce(pos, pos_others)
 
             # update positions and velocities
             # use the user-specified algorithm
             if self.method == "Euler":
                 newpos = self.bodies.positions + self.timestep * self.bodies.velocities
-                newpos = posInBox(newpos, self.box.edges)
+                newpos = posInBox(newpos, self.box.lengths)
 
                 newvel = self.bodies.velocities + self.timestep * forces
 
             elif self.method == "Verlet":
                 newpos = 2*self.bodies.positions - old_pos + self.timestep**2 * forces
-                newpos = posInBox(newpos, self.box.edges)
+                newpos = posInBox(newpos, self.box.lengths)
 
                 newvel = (newpos - old_pos) / (2*self.timestep)
+
+                # save the current positions as "old positions" for the next iteration
+                old_pos = self.bodies.positions
 
             else:
                 raise ValueError("Invalid integration method given. Use 'Euler' or 'Verlet'.")
 
             self.bodies.positions = newpos
             self.bodies.velocities = newvel
-
-
 
         # total energy
         total_energy = np.array(kinetic_energy) + np.array(potential_energy)

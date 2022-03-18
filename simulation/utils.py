@@ -11,31 +11,31 @@ def distanceFromPosition(pos1, pos2):
     return dist
 
 
-def posInBox(pos, edges):
+def posInBox(pos, lengths):
     '''Simple function for shifting a particle position inside the box.'''
 
-    lengths = edges[:,1] - edges[:,0]
-    pos = edges[:,0] + (pos + 2*lengths) % lengths
+    pos = (pos + 2*lengths) % lengths
     return pos
 
 
-def minimumImageForces(positions, edges):
+def minimumImageForces(positions, lengths):
 
     forces = np.zeros(positions.shape)
-    lengths = edges[:,1] - edges[:,0]
 
     for i in range(len(forces)):
         pos = positions[i]
         pos_others = np.concatenate((positions[:i], positions[i+1:]))
 
-        pos_diff = pos_others - pos
-        nearest_positions = pos_others - lengths * np.rint(pos_diff/lengths)
+        pos_diff = pos - pos_others
+        nearest_positions = pos_others + lengths * np.rint(pos_diff/lengths)
+        #pos_diff = pos_others - pos
+        #nearest_positions = pos_others - lengths * np.rint(pos_diff/lengths)
         forces[i] = LennardJonesForce(pos, nearest_positions)
 
     return forces
 
 
-def LennardJonesForce(pos1, pos_others, soft_eps=0.):
+def LennardJonesForce(pos1, pos_others, soft_eps=0.01):
     '''
     Computes the dimensionless force acting on the particle with position 1 due to a Lennard-Jones potential
     caused by particles with dimensionless positions pos_others.
@@ -54,6 +54,8 @@ def LennardJonesForce(pos1, pos_others, soft_eps=0.):
 
     for i in range(len(pos_others)):
         distances[i] = distanceFromPosition(pos1, pos_others[i])
+    if np.sum(distances < 0) > 0:
+        print ("Negative distances detected.")
 
     # array calculations for speed
     # these are all 1D arrays of length n_other_particles
@@ -68,25 +70,25 @@ def LennardJonesForce(pos1, pos_others, soft_eps=0.):
     # numpy can't automatically broadcast 2D and 1D --> loop over dimensions
     forceTerms = np.zeros(relativePositions.shape)
     for dim in range(relativePositions.shape[-1]):
-        forceTerms[:,dim] = relativePositions[:,dim]/(distances**2 + soft_eps) * (termPauli + termWaals)
+        forceTerms[:,dim] = relativePositions[:,dim]/(distances + soft_eps)**2 * (termPauli + termWaals)
 
     totalForce = 4 * np.sum(forceTerms, axis=0)
 
     return totalForce
 
 
-def LennardJonesPotential(pos1, pos_others, soft_eps=0.0001):
+def LennardJonesPotential(pos1, pos_others, soft_eps=0.01):
 
     distances = np.zeros(len(pos_others))
 
     for i in range(len(pos_others)):
         distances[i] = distanceFromPosition(pos1, pos_others[i])
 
-    termPauli = -(distances + soft_eps)**-6
-    termWaals = (distances + soft_eps)**-12
+    termPauli = -1./(distances + soft_eps)**6
+    termWaals = 1./(distances + soft_eps)**12
 
-    potential_terms = 4 * (termWaals + termPauli)
-    potential = np.sum(potential_terms)
+    potential_terms = termWaals + termPauli
+    potential = 4 * np.sum(potential_terms)
 
     return potential
 
