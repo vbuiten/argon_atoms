@@ -11,22 +11,6 @@ def distanceFromPosition(pos1, pos2):
     return dist
 
 
-def periodicCopies(positions, length):
-    '''Create periodic copies for each particle specified by positions.'''
-
-    n_particles = len(positions)
-    dim = positions.shape[-1]
-    copies = np.zeros((n_particles, 9, dim))
-    print ("copies.shape:", copies.shape)
-
-    for i in range(n_particles):
-        for j in (copies.shape[1],):
-            for k in (copies.shape[-1],):
-                copies[i,j,k] = positions[i,k] - length + 0.5*j*length
-
-    return copies
-
-
 def posInBox(pos, edges):
     '''Simple function for shifting a particle position inside the box.'''
 
