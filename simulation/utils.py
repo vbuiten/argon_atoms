@@ -35,7 +35,7 @@ def minimumImageForces(positions, lengths):
     return forces
 
 
-def LennardJonesForce(pos1, pos_others, soft_eps=0.01):
+def LennardJonesForce(pos1, pos_others, soft_eps=1e-10):
     '''
     Computes the dimensionless force acting on the particle with position 1 due to a Lennard-Jones potential
     caused by particles with dimensionless positions pos_others.
@@ -59,8 +59,8 @@ def LennardJonesForce(pos1, pos_others, soft_eps=0.01):
 
     # array calculations for speed
     # these are all 1D arrays of length n_other_particles
-    termPauli = -6 * (distances + soft_eps)**-6
-    termWaals = 12 * (distances + soft_eps)**-12
+    termPauli = -6 / (distances**6 + soft_eps)
+    termWaals = 12 / (distances**12 + soft_eps)
 
     # now compute the relative position vector x_i - x_j for each particle j
     # shape is (n_other_particles, dim)
@@ -70,22 +70,22 @@ def LennardJonesForce(pos1, pos_others, soft_eps=0.01):
     # numpy can't automatically broadcast 2D and 1D --> loop over dimensions
     forceTerms = np.zeros(relativePositions.shape)
     for dim in range(relativePositions.shape[-1]):
-        forceTerms[:,dim] = relativePositions[:,dim]/(distances + soft_eps)**2 * (termPauli + termWaals)
+        forceTerms[:,dim] = relativePositions[:,dim]/(distances**2 + soft_eps) * (termPauli + termWaals)
 
     totalForce = 4 * np.sum(forceTerms, axis=0)
 
     return totalForce
 
 
-def LennardJonesPotential(pos1, pos_others, soft_eps=0.01):
+def LennardJonesPotential(pos1, pos_others, soft_eps=1e-10):
 
     distances = np.zeros(len(pos_others))
 
     for i in range(len(pos_others)):
         distances[i] = distanceFromPosition(pos1, pos_others[i])
 
-    termPauli = -1./(distances + soft_eps)**6
-    termWaals = 1./(distances + soft_eps)**12
+    termPauli = -1./(distances**6 + soft_eps)
+    termWaals = 1./(distances**12 + soft_eps)
 
     potential_terms = termWaals + termPauli
     potential = 4 * np.sum(potential_terms)
