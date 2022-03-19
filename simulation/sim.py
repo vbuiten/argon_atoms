@@ -40,19 +40,20 @@ class NBodyWorker:
         print ("File created.")
 
 
-    def equilibriate(self, iterations=50, iteration_time=100., threshold=1.e-2):
+    def equilibriate(self, iterations=50, iteration_time=30., threshold=1.e-2):
 
         target_kinetic_energy = (self.bodies.dim/2) * (self.bodies.n_atoms - 1) * self.bodies.dimlessTemp
 
         times = np.arange(0., iteration_time, self.timestep)
-        length = self.box.lengths[0]
 
         # save the energy fractions for each iteration
         energy_fractions = []
 
         # use Euler integration backwards for the positions at t = -1
         if self.method == "Verlet":
-            old_pos = posInBox(self.bodies.positions - self.timestep * self.bodies.velocities, self.box.lengths)
+            #old_pos = posInBox(self.bodies.positions - self.timestep * self.bodies.velocities, self.box.lengths)
+            old_pos = self.bodies.positions - self.timestep * self.bodies.velocities
+            current_pos = self.bodies.positions
 
         fractional_deviation = np.inf
 
@@ -83,12 +84,16 @@ class NBodyWorker:
                     newvel = self.bodies.velocities + self.timestep * forces
 
                 elif self.method == "Verlet":
-                    newpos = 2 * self.bodies.positions - old_pos + self.timestep ** 2 * forces
-                    newpos = posInBox(newpos, self.box.lengths)
+                    newpos = 2 * current_pos - old_pos + self.timestep ** 2 * forces
 
+                    # compute velocity before shifting positions to stay inside the box
                     newvel = (newpos - old_pos) / (2 * self.timestep)
 
-                    old_pos = self.bodies.positions
+                    # save the current positions as "old positions" for the next iteration
+                    old_pos = current_pos
+                    current_pos = newpos
+
+                    newpos = posInBox(newpos, self.box.lengths)
 
                 else:
                     raise ValueError("Invalid integration method given. Use 'Euler' or 'Verlet'.")
@@ -115,6 +120,7 @@ class NBodyWorker:
 
                 # rescale the velocities
                 newvel = vel_scale_factor * self.bodies.velocities
+
                 self.bodies.velocities = newvel
 
                 print ("Rescaled velocities.")
@@ -142,8 +148,11 @@ class NBodyWorker:
 
         if self.method == "Verlet":
             # compute the "previous set" of positions (backward Euler)
+            # these have to ignore the "stay in box" condition!
             pos_subtract = self.timestep * self.bodies.velocities
-            old_pos = posInBox(self.bodies.positions - pos_subtract, self.box.lengths)
+            #old_pos = posInBox(self.bodies.positions - pos_subtract, self.box.lengths)
+            old_pos = self.bodies.positions - pos_subtract
+            current_pos = self.bodies.positions
 
         for idx, time in enumerate(times):
 
@@ -182,13 +191,16 @@ class NBodyWorker:
                 newvel = self.bodies.velocities + self.timestep * forces
 
             elif self.method == "Verlet":
-                newpos = 2*self.bodies.positions - old_pos + self.timestep**2 * forces
-                newpos = posInBox(newpos, self.box.lengths)
+                newpos = 2*current_pos - old_pos + self.timestep**2 * forces
 
-                newvel = (newpos - old_pos) / (2*self.timestep)
+                # compute velocity before shifting positions to stay inside the box
+                newvel = (newpos - old_pos) / (2 * self.timestep)
 
                 # save the current positions as "old positions" for the next iteration
-                old_pos = self.bodies.positions
+                old_pos = current_pos
+                current_pos = newpos
+
+                newpos = posInBox(newpos, self.box.lengths)
 
             else:
                 raise ValueError("Invalid integration method given. Use 'Euler' or 'Verlet'.")

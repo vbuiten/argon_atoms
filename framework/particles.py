@@ -56,7 +56,7 @@ class Particles:
                 #print ("Velocities set.")
 
             else:
-                print ("Given velocities have incorrent dimensions.")
+                print ("Given velocities have incorrect dimensions.")
 
         else:
             # the user will give a standard deviation for the gaussian
@@ -87,11 +87,7 @@ class Particles:
     def kineticEnergy(self):
         '''Computes the kinetic energy of the particles (in dimensionless units).'''
 
-        velsquared = np.zeros(self.n_atoms)
-        for i in range(self.n_atoms):
-            velsquared[i] = np.dot(self.velocities[i], self.velocities[i])
-
-        kinetic_energy = 0.5 * np.sum(velsquared)
+        kinetic_energy = 0.5 * np.sum(self.velocities**2)
 
         return kinetic_energy
 

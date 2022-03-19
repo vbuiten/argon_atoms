@@ -59,7 +59,7 @@ class EnergyPlotter:
     def plotTotal(self, alpha=0.7):
 
         self.ax.plot(self.times, self.tot_energy, markersize=self.plotprefs.markersize,
-                     label="Total energy", alpha=alpha)
+                     label="Total energy", alpha=alpha, ls="--")
 
     def plotAll(self, alpha=0.7):
 
