@@ -40,7 +40,7 @@ class NBodyWorker:
         print ("File created.")
 
 
-    def equilibriate(self, iterations=50, iteration_time=30., threshold=1.e-2):
+    def equilibriate(self, iterations=5, iteration_time=100., threshold=1.e-2):
 
         target_kinetic_energy = (self.bodies.dim/2) * (self.bodies.n_atoms - 1) * self.bodies.dimlessTemp
 
@@ -53,6 +53,7 @@ class NBodyWorker:
         if self.method == "Verlet":
             #old_pos = posInBox(self.bodies.positions - self.timestep * self.bodies.velocities, self.box.lengths)
             old_pos = self.bodies.positions - self.timestep * self.bodies.velocities
+            #old_pos = self.bodies.positions + self.timestep * self.bodies.velocities
             current_pos = self.bodies.positions
 
         fractional_deviation = np.inf
@@ -133,6 +134,7 @@ class NBodyWorker:
 
 
     def evolve(self, t_end, savefile=None, timestep_external=1.):
+        '''TO DO: fix backwards Euler for periodic boundary conidtions'''
 
         times = np.arange(self.time, self.time+t_end, self.timestep)
         times_external = []
@@ -152,6 +154,7 @@ class NBodyWorker:
             pos_subtract = self.timestep * self.bodies.velocities
             #old_pos = posInBox(self.bodies.positions - pos_subtract, self.box.lengths)
             old_pos = self.bodies.positions - pos_subtract
+            #old_pos = self.bodies.positions + pos_subtract
             current_pos = self.bodies.positions
 
         for idx, time in enumerate(times):

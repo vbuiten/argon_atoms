@@ -35,7 +35,7 @@ def minimumImageForces(positions, lengths):
     return forces
 
 
-def LennardJonesForce(pos1, pos_others, soft_eps=0.0):
+def LennardJonesForce(pos1, pos_others, soft_eps=1e-10):
     '''
     Computes the dimensionless force acting on the particle with position 1 due to a Lennard-Jones potential
     caused by particles with dimensionless positions pos_others.
@@ -77,7 +77,7 @@ def LennardJonesForce(pos1, pos_others, soft_eps=0.0):
     return totalForce
 
 
-def LennardJonesPotential(pos1, pos_others, soft_eps=0.0):
+def LennardJonesPotential(pos1, pos_others, soft_eps=1e-10):
 
     distances = np.zeros(len(pos_others))
 

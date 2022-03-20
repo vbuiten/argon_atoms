@@ -35,8 +35,15 @@ class Particles:
             # generate random positions from a uniform distribution
             # pos can be passed as an array containing the edges of the box
 
-            position = np.random.uniform(low=pos[:,0], high=pos[:,1], size=(self.n_atoms, self.dim))
-            self._positions = position
+            #position = np.random.uniform(low=pos[:,0], high=pos[:,1], size=(self.n_atoms, self.dim))
+            #self._positions = position
+
+            lengths = pos[:,1] - pos[:,0]
+            n_units = int((self.n_atoms / 4)**1/3)
+            unitlength = lengths[0] / 3
+
+            self._positions = initialiseLattice(unitlength, self.dim, n_units)
+
 
         else:
             print ("Invalid argument given.")
@@ -126,3 +133,27 @@ class Particles:
         file = h5py.File(self.savefile, "r+")
         dataset = file["/particles"]
         dataset["positions"].append(self.positions)
+
+
+def initialiseLattice(unitlength, dim=3, units=3):
+
+    positions = []
+
+    if dim == 2:
+        for i in range(units):
+            for j in range(units):
+                positions.append([i,j])
+                positions.append([i,j+0.5])
+                positions.append([i+0.5,j])
+
+    elif dim == 3:
+        for i in range(units):
+            for j in range(units):
+                for k in range(units):
+                    positions.append([i,j,k])
+                    positions.append([i,j,k+0.5])
+                    positions.append([i,j+0.5,k])
+                    positions.append([i+0.5,j,k])
+
+
+    return np.array(positions) * unitlength
