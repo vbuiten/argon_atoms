@@ -10,12 +10,15 @@ class Particles:
         self.dim = dim
         self.mass = mass
 
+        '''
         if unitscaler is None:
             self.unitscaler = UnitScaler()
         elif isinstance(unitscaler, UnitScaler):
             self.unitscaler = unitscaler
         else:
             raise TypeError("Invalid unitscaler given.")
+            
+        '''
 
         self.savefile = None
 
@@ -39,7 +42,7 @@ class Particles:
             #self._positions = position
 
             lengths = pos[:,1] - pos[:,0]
-            n_units = int((self.n_atoms / 4)**1/3)
+            n_units = int((self.n_atoms / (self.dim + 1))**(1/self.dim))
             unitlength = lengths[0] / 3
 
             self._positions = initialiseLattice(unitlength, self.dim, n_units)
@@ -68,27 +71,27 @@ class Particles:
         else:
             # the user will give a standard deviation for the gaussian
             # generate random positions from a gaussian
-            # we'll probably want to change this to a Maxwell-Boltzmann distribution
-            mean = np.zeros(self.dim)
-            cov = np.diag(vel * np.ones(self.dim))
-            gauss = multivariate_normal(mean=mean, cov=cov)
-            self._velocities = gauss.rvs(size=(self.n_atoms))
+            mean = 0.
+            scale = vel
+            self._velocities = np.random.normal(mean, scale, size=(self.n_atoms, self.dim))
 
 
     @property
     def temperature(self):
+        '''Calculate the actual temperature given the particles' velocities.'''
+
+        self._temperature = np.mean(self.velocities**2)
+
         return self._temperature
 
     @temperature.setter
     def temperature(self, dimlessTemp):
         '''Draws random particle velocities using the given real temperature in K.'''
 
-        #self._temperature = temp
-        #self.dimlessTemp = self.unitscaler.toDimlessTemperature(temp)
         self.dimlessTemp = dimlessTemp
         self.velocities = np.sqrt(self.dimlessTemp)
 
-        self._temperature = self.unitscaler.toKelvinFromDimlessTemperature(self.dimlessTemp)
+        self._temperature = dimlessTemp
 
 
     def kineticEnergy(self):

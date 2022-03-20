@@ -12,9 +12,9 @@ import matplotlib.pyplot as plt
 savepath = "C:\\Users\\victo\\Documents\\Uni\\COP\\"
 #savepath = "/net/vdesk/data2/buiten/COP/"
 
-n_atoms = 32
+n_atoms = 108
 
-box = BoxBase(0.2, n_atoms, 3)
+box = BoxBase(1.2, n_atoms, 3)
 atoms = Particles(n_atoms,3)
 atoms.positions = box.edges
 atoms.temperature = 0.5
@@ -24,13 +24,13 @@ print(atoms.positions)
 #print(forces*0.01)
 
 #print ("Initial velocities:", atoms.velocities)
-workerVerlet = NBodyWorker(atoms, box, timestep=0.01, minimage=True)
-#Efracs = workerVerlet.equilibriate(iterations=10, threshold=0.1, iteration_time=50)
+workerVerlet = NBodyWorker(atoms, box, timestep=0.01, minimage=True, method="Verlet")
+Efracs = workerVerlet.equilibriate(iterations=10, threshold=0.1, iteration_time=10)
 workerVerlet.evolve(20, timestep_external=0.1, savefile=savepath+"verlet-test.hdf")
 #print ("Velocities after integrating:", atoms.velocities)
 
 fig, ax = plt.subplots()
-#ax.plot([i for i in range(len(Efracs))], Efracs)
+ax.plot([i for i in range(len(Efracs))], Efracs)
 ax.set_xlabel("Iteration")
 ax.set_ylabel(r"$\frac{E_{target}}{E_{kin}}$")
 fig.show()

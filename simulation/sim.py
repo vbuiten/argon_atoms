@@ -49,13 +49,6 @@ class NBodyWorker:
         # save the energy fractions for each iteration
         energy_fractions = []
 
-        # use Euler integration backwards for the positions at t = -1
-        if self.method == "Verlet":
-            #old_pos = posInBox(self.bodies.positions - self.timestep * self.bodies.velocities, self.box.lengths)
-            old_pos = self.bodies.positions - self.timestep * self.bodies.velocities
-            #old_pos = self.bodies.positions + self.timestep * self.bodies.velocities
-            current_pos = self.bodies.positions
-
         fractional_deviation = np.inf
 
         #while np.abs(fractional_deviation) > threshold:
@@ -85,14 +78,22 @@ class NBodyWorker:
                     newvel = self.bodies.velocities + self.timestep * forces
 
                 elif self.method == "Verlet":
+
+                    if idx == 0:
+                        # compute the "previous set" of positions (backward Euler)
+                        # these have to ignore the "stay in box" condition!
+                        old_pos = self.bodies.positions - self.timestep * self.bodies.velocities
+                        # old_pos = self.bodies.positions + pos_subtract
+                        current_pos = np.copy(self.bodies.positions)
+
                     newpos = 2 * current_pos - old_pos + self.timestep ** 2 * forces
 
                     # compute velocity before shifting positions to stay inside the box
                     newvel = (newpos - old_pos) / (2 * self.timestep)
 
                     # save the current positions as "old positions" for the next iteration
-                    old_pos = current_pos
-                    current_pos = newpos
+                    old_pos = np.copy(current_pos)
+                    current_pos = np.copy(newpos)
 
                     newpos = posInBox(newpos, self.box.lengths)
 
@@ -148,15 +149,6 @@ class NBodyWorker:
 
         length = self.box.length
 
-        if self.method == "Verlet":
-            # compute the "previous set" of positions (backward Euler)
-            # these have to ignore the "stay in box" condition!
-            pos_subtract = self.timestep * self.bodies.velocities
-            #old_pos = posInBox(self.bodies.positions - pos_subtract, self.box.lengths)
-            old_pos = self.bodies.positions - pos_subtract
-            #old_pos = self.bodies.positions + pos_subtract
-            current_pos = self.bodies.positions
-
         for idx, time in enumerate(times):
 
             # save the current state of the system
@@ -194,14 +186,22 @@ class NBodyWorker:
                 newvel = self.bodies.velocities + self.timestep * forces
 
             elif self.method == "Verlet":
+
+                if idx == 0:
+                    # compute the "previous set" of positions (backward Euler)
+                    # these have to ignore the "stay in box" condition!
+                    old_pos = self.bodies.positions - self.timestep * self.bodies.velocities
+                    # old_pos = self.bodies.positions + pos_subtract
+                    current_pos = np.copy(self.bodies.positions)
+
                 newpos = 2*current_pos - old_pos + self.timestep**2 * forces
 
                 # compute velocity before shifting positions to stay inside the box
                 newvel = (newpos - old_pos) / (2 * self.timestep)
 
                 # save the current positions as "old positions" for the next iteration
-                old_pos = current_pos
-                current_pos = newpos
+                old_pos = np.copy(current_pos)
+                current_pos = np.copy(newpos)
 
                 newpos = posInBox(newpos, self.box.lengths)
 
