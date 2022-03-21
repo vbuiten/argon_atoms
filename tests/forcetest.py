@@ -2,7 +2,7 @@
 
 from framework.box import BoxBase
 from framework.particles import Particles
-from simulation.sim import NBodyWorker
+from simulation.sim import Simulator
 from simulation.utils import minimumImageForces
 from analysis.visualisation import TrajectoryPlotter
 from analysis.energies import EnergyPlotter
@@ -27,7 +27,7 @@ forces = minimumImageForces(atoms.positions, box.lengths)
 print(forces*0.001)
 
 #print ("Initial velocities:", atoms.velocities)
-workerVerlet = NBodyWorker(atoms, box, timestep=0.001, minimage=True)
+workerVerlet = Simulator(atoms, box, timestep=0.001, minimage=True)
 workerVerlet.evolve(3, timestep_external=0.01, savefile=savepath+"verlet-test.hdf")
 #print ("Velocities after integrating:", atoms.velocities)
 

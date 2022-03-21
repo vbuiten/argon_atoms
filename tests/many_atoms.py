@@ -2,7 +2,7 @@
 
 from framework.box import BoxBase
 from framework.particles import Particles
-from simulation.sim import NBodyWorker
+from simulation.sim import Simulator
 from analysis.visualisation import TrajectoryPlotter
 from analysis.energies import EnergyPlotter
 import numpy as np
@@ -14,7 +14,7 @@ box = BoxBase(0.3, 100, 2)
 atoms = Particles(100,2)
 atoms.positions = box.edges
 atoms.velocities = 1.
-worker = NBodyWorker(atoms, box, timestep=0.01)
+worker = Simulator(atoms, box, timestep=0.01)
 worker.evolve(100, timestep_external=1., savefile=savepath+"100-atoms-test.hdf")
 
 plotter = TrajectoryPlotter(savepath+"100-atoms-test.hdf")

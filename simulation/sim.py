@@ -4,7 +4,7 @@ import numpy as np
 from simulation.utils import LennardJonesForce, posInBox, minimumImageForces
 import h5py
 
-class NBodyWorker:
+class Simulator:
     def __init__(self, bodies, box, timestep=0.1, method="Verlet", minimage=True):
 
         # check if box and bodies have the same dimensions
@@ -100,8 +100,6 @@ class NBodyWorker:
 
         target_kinetic_energy = (self.bodies.dim/2) * (self.bodies.n_atoms - 1) * self.bodies.dimlessTemp
 
-        times = np.arange(0., iteration_time, self.timestep)
-
         # save the energy fractions for each iteration
         energy_fractions = []
 
@@ -114,58 +112,6 @@ class NBodyWorker:
 
             self.evolve(iteration_time)
 
-            '''
-            for idx, time in enumerate(times):
-
-                current_pos, old_pos = self.evolutionStep(idx, current_pos, old_pos)
-
-                
-                if self.minimage:
-                    # first compute the force acting on each particle
-                    forces = minimumImageForces(self.bodies.positions, self.box.lengths)
-
-                else:
-                    forces = np.zeros(self.bodies.positions.shape)
-                    for i in range(len(forces)):
-                        pos = self.bodies.positions[i]
-                        pos_others = np.concatenate((self.bodies.positions[:i], self.bodies.positions[i + 1:]))
-                        forces[i] = LennardJonesForce(pos, pos_others)
-
-                # update positions and velocities
-                # use the user-specified algorithm
-                if self.method == "Euler":
-                    newpos = self.bodies.positions + self.timestep * self.bodies.velocities
-                    newpos = posInBox(newpos, self.box.lengths)
-
-                    newvel = self.bodies.velocities + self.timestep * forces
-
-                elif self.method == "Verlet":
-
-                    if idx == 0:
-                        # compute the "previous set" of positions (backward Euler)
-                        # these have to ignore the "stay in box" condition!
-                        old_pos = self.bodies.positions - self.timestep * self.bodies.velocities
-                        # old_pos = self.bodies.positions + pos_subtract
-                        current_pos = np.copy(self.bodies.positions)
-
-                    newpos = 2 * current_pos - old_pos + self.timestep ** 2 * forces
-
-                    # compute velocity before shifting positions to stay inside the box
-                    newvel = (newpos - old_pos) / (2 * self.timestep)
-
-                    # save the current positions as "old positions" for the next iteration
-                    old_pos = np.copy(current_pos)
-                    current_pos = np.copy(newpos)
-
-                    newpos = posInBox(newpos, self.box.lengths)
-
-                else:
-                    raise ValueError("Invalid integration method given. Use 'Euler' or 'Verlet'.")
-
-                self.bodies.positions = newpos
-                self.bodies.velocities = newvel
-                '''
-
             # measure the new kinetic energy after evolving
             real_kinetic_energy = self.bodies.kineticEnergy()
             energy_fraction = target_kinetic_energy / real_kinetic_energy
@@ -176,9 +122,8 @@ class NBodyWorker:
             #print("target E_kin / real E_kin - 1 =", fractional_deviation)
 
             if np.abs(fractional_deviation) > threshold:
-                vel_scale_factor = np.sqrt(energy_fraction)
 
-                #print ("Scale factor:", vel_scale_factor)
+                vel_scale_factor = np.sqrt(energy_fraction)
 
                 # rescale the velocities
                 newvel = vel_scale_factor * self.bodies.velocities
@@ -293,5 +238,3 @@ class NBodyWorker:
             self.saveToFile(savefile, times_external)
 
         print ("Simulation finished.")
-        #print ("Internal times:", times)
-        #print ("External times:", times_external)

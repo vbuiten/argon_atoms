@@ -2,7 +2,7 @@
 
 from framework.box import BoxBase
 from framework.particles import Particles
-from simulation.sim import NBodyWorker
+from simulation.sim import Simulator
 from analysis.visualisation import TrajectoryPlotter
 from analysis.energies import EnergyPlotter
 import numpy as np
@@ -16,10 +16,10 @@ box = BoxBase(0.1, n_atoms, 3)
 atoms = Particles(n_atoms,3)
 atoms.positions = box.edges
 atoms.temperature = 3.0
-workerVerlet = NBodyWorker(atoms, box, timestep=0.01, minimage=True)
+workerVerlet = Simulator(atoms, box, timestep=0.01, minimage=True)
 workerVerlet.evolve(50, timestep_external=1., savefile=savepath+"verlet-test.hdf")
 
-workerEuler = NBodyWorker(atoms, box, timestep=0.01, method="Euler")
+workerEuler = Simulator(atoms, box, timestep=0.01, method="Euler")
 workerEuler.evolve(50, timestep_external=1., savefile=savepath+"euler-test.hdf")
 
 
