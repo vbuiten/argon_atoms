@@ -26,8 +26,13 @@ class NBodyWorker:
         vel_dataset = file.create_dataset("velocity-history", data=self.vel_history)
         E_kin_dataset = file.create_dataset("energy-history", data=self.energy_history)
 
-        pos_dataset.attrs["times"] = times
-        vel_dataset.attrs["times"] = times
+        times_dataset = file.create_dataset("times", data=times)
+
+        pos_dataset.attrs["temperature"] = self.bodies.temperature
+        vel_dataset.attrs["temperature"] = self.bodies.temperature
+
+        pos_dataset.attrs["density"] = self.box.density
+        vel_dataset.attrs["density"] = self.box.density
 
         pos_dataset.attrs["box-edges"] = self.box.edges
         vel_dataset.attrs["box-edges"] = self.box.edges

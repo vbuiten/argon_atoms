@@ -9,6 +9,7 @@ class BoxBase:
         self.dim = dim
 
         # set the dimensionless volume and box lengths
+        self.density = dimlessDensity
         self.volume = n_atoms / dimlessDensity
         length = self.volume**(1./self.dim)
         self.lengths = length * np.ones(self.dim)
