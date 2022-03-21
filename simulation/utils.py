@@ -177,3 +177,9 @@ class UnitScaler:
 
     def toDimlessDensity(self, kg_per_m3):
         return (self.length_scale**3 / self.mass_scale) * kg_per_m3
+
+    def toJoulePerCubicMeter(self, dimless_pressure):
+        return (self.energy_scale / self.length_scale**3) * dimless_pressure
+
+    def toDimlessPressure(self, joule_per_m3):
+        return (self.length_scale**3 / self.energy_scale) * joule_per_m3

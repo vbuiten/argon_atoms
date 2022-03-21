@@ -5,32 +5,14 @@ import matplotlib.pyplot as plt
 
 import framework.particles
 from simulation.utils import minimumImagePositions
-from analysis.utils import PlotPreferences
+from analysis.utils import PlotPreferences, RepeatedSimsBase
 
-class DistanceHistogram:
+class DistanceHistogram(RepeatedSimsBase):
     '''Create a histogram of the distances between pairs of particles.'''
 
     def __init__(self, particles, box_lengths, bins=10, plotprefs=None):
 
-        if isinstance(particles, framework.particles.Particles):
-            particles = [particles]
-
-        self.box_lengths = box_lengths
-        self.n_iterations = len(particles)
-        self.n_atoms = particles[0].n_atoms
-        self.dim = particles[0].dim
-
-        if isinstance(self.box_lengths, np.ndarray) and len(self.box_lengths.shape) == 1:
-            self.volume = self.box_lengths[0]**self.dim
-
-        elif isinstance(self.box_lengths, float):
-            self.volume = self.box_lengths**self.dim
-
-        else:
-            raise ValueError("Invalid box_lengths given. Give either a 1D array or a float.")
-
-        self.temperature = particles[0].temperature
-        self.density = self.n_atoms / self.volume
+        super().__init__(particles, box_lengths)
 
         self.distances = np.zeros((len(particles), self.n_atoms, self.n_atoms-1))
 
@@ -39,7 +21,7 @@ class DistanceHistogram:
             self.distances[idx] = el.pairDistances(box_lengths)
 
         if isinstance(bins, int):
-            min_edge, max_edge = self.distances.min(), self.distances.max()
+            min_edge, max_edge = 0., self.distances.max()
             width = (max_edge - min_edge)/bins
             bin_edges = np.arange(min_edge, max_edge, width)
 

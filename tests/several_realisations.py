@@ -4,12 +4,13 @@ from framework.box import BoxBase
 from framework.particles import Particles
 from simulation.sim import Simulator
 from analysis.correlation import DistanceHistogram, CorrelationFunction
+from analysis.pressure import VirialPressure
 
-#savepath = "C:\\Users\\victo\\Documents\\Uni\\COP\\"
-savepath = "/net/vdesk/data2/buiten/COP/"
+savepath = "C:\\Users\\victo\\Documents\\Uni\\COP\\"
+#savepath = "/net/vdesk/data2/buiten/COP/"
 
 n_atoms = 108
-iterations = 10
+iterations = 20
 temperature = 3.0
 density = 0.3
 
@@ -37,3 +38,7 @@ distance_hist.show()
 corr_func = CorrelationFunction(particle_sets, box.lengths, bins=100)
 corr_func.plot()
 corr_func.show()
+
+pressure = VirialPressure(particle_sets, box.lengths)
+pressure.plot()
+pressure.show()

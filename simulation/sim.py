@@ -3,6 +3,7 @@
 import numpy as np
 from simulation.utils import LennardJonesForce, posInBox, minimumImageForces
 import h5py
+from numba import jit
 
 class Simulator:
     def __init__(self, bodies, box, timestep=0.1, method="Verlet", minimage=True):
