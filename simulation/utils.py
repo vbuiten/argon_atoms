@@ -1,7 +1,9 @@
 '''Module containing utility functions for doing argon simulations.'''
 
 import numpy as np
+from numba import jit
 
+@jit(nopython=True, parallel=False)
 def distanceFromPosition(pos1, pos2):
     '''Calculates the distance between 1D arrays pos1 and pos2.'''
 
@@ -10,48 +12,32 @@ def distanceFromPosition(pos1, pos2):
 
     return dist
 
-
-def periodicCopies(positions, length):
-    '''Create periodic copies for each particle specified by positions.'''
-
-    n_particles = len(positions)
-    dim = positions.shape[-1]
-    copies = np.zeros((n_particles, 9, dim))
-    print ("copies.shape:", copies.shape)
-
-    for i in range(n_particles):
-        for j in (copies.shape[1],):
-            for k in (copies.shape[-1],):
-                copies[i,j,k] = positions[i,k] - length + 0.5*j*length
-
-    return copies
-
-
-def posInBox(pos, edges):
+@jit(nopython=True, parallel=False)
+def posInBox(pos, lengths):
     '''Simple function for shifting a particle position inside the box.'''
 
-    lengths = edges[:,1] - edges[:,0]
-    pos = edges[:,0] + (pos + 2*lengths) % lengths
+    pos = (pos + 2*lengths) % lengths
     return pos
 
-
-def minimumImageForces(positions, edges):
+@jit(nopython=True, parallel=False)
+def minimumImageForces(positions, lengths):
 
     forces = np.zeros(positions.shape)
-    lengths = edges[:,1] - edges[:,0]
 
     for i in range(len(forces)):
         pos = positions[i]
         pos_others = np.concatenate((positions[:i], positions[i+1:]))
 
-        pos_diff = pos_others - pos
-        nearest_positions = pos_others - lengths * np.rint(pos_diff/lengths)
+        pos_diff = pos - pos_others
+        nearest_positions = pos_others + lengths * np.rint(pos_diff/lengths)
+        #pos_diff = pos_others - pos
+        #nearest_positions = pos_others - lengths * np.rint(pos_diff/lengths)
         forces[i] = LennardJonesForce(pos, nearest_positions)
 
     return forces
 
-
-def LennardJonesForce(pos1, pos_others, soft_eps=0.0001):
+@jit(nopython=True, parallel=False)
+def LennardJonesForce(pos1, pos_others, soft_eps=1e-10):
     '''
     Computes the dimensionless force acting on the particle with position 1 due to a Lennard-Jones potential
     caused by particles with dimensionless positions pos_others.
@@ -70,11 +56,13 @@ def LennardJonesForce(pos1, pos_others, soft_eps=0.0001):
 
     for i in range(len(pos_others)):
         distances[i] = distanceFromPosition(pos1, pos_others[i])
+    if np.sum(distances < 0) > 0:
+        print ("Negative distances detected.")
 
     # array calculations for speed
     # these are all 1D arrays of length n_other_particles
-    termPauli = -6 * (distances + soft_eps)**-6
-    termWaals = 12 * (distances + soft_eps)**-12
+    termPauli = -6 / (distances**6 + soft_eps)
+    termWaals = 12 / (distances**12 + soft_eps)
 
     # now compute the relative position vector x_i - x_j for each particle j
     # shape is (n_other_particles, dim)
@@ -90,19 +78,19 @@ def LennardJonesForce(pos1, pos_others, soft_eps=0.0001):
 
     return totalForce
 
-
-def LennardJonesPotential(pos1, pos_others, soft_eps=0.0001):
+@jit(nopython=True, parallel=False)
+def LennardJonesPotential(pos1, pos_others, soft_eps=1e-10):
 
     distances = np.zeros(len(pos_others))
 
     for i in range(len(pos_others)):
         distances[i] = distanceFromPosition(pos1, pos_others[i])
 
-    termPauli = -(distances + soft_eps)**-6
-    termWaals = (distances + soft_eps)**-12
+    termPauli = -1./(distances**6 + soft_eps)
+    termWaals = 1./(distances**12 + soft_eps)
 
-    potential_terms = 4 * (termWaals + termPauli)
-    potential = np.sum(potential_terms)
+    potential_terms = termWaals + termPauli
+    potential = 4 * np.sum(potential_terms)
 
     return potential
 
@@ -120,6 +108,12 @@ class UnitScaler:
 
     def toDimlessLength(self, meters):
         return meters / self.length_scale
+
+    def toCubicMeters(self, dimless_volume):
+        return self.length_scale**3 * dimless_volume
+
+    def toDimlessVolume(self, cubic_meters):
+        return cubic_meters / self.length_scale**3
 
     def toSeconds(self, dimless_time):
         factor = np.sqrt(self.mass_scale*self.length_scale**2 / self.energy_scale)
@@ -149,7 +143,10 @@ class UnitScaler:
     def toDimlessTemperature(self, kelvin):
         return self.k_boltzmann * kelvin / self.energy_scale
 
-    def toKelvin(self, dimless_energy):
+    def toKelvinFromDimlessTemperature(self, dimless_temperature):
+        return (self.energy_scale * self.k_boltzmann) * dimless_temperature
+
+    def toKelvinFromDimlessEnergy(self, dimless_energy):
         return self.toJoule(dimless_energy) / self.k_boltzmann
 
     def toDimlessEnergy(self, joules):
@@ -160,3 +157,9 @@ class UnitScaler:
 
     def toDimlessForce(self, newton):
         return self.energy_scale / self.length_scale**2 * newton
+
+    def toKilogramPerCubicMeter(self, dimless_density):
+        return (self.mass_scale / self.length_scale**3) * dimless_density
+
+    def toDimlessDensity(self, kg_per_m3):
+        return (self.length_scale**3 / self.mass_scale) * kg_per_m3

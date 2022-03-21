@@ -2,7 +2,7 @@
 
 from framework.box import BoxBase
 from framework.particles import Particles
-from simulation.sim import NBodyWorker
+from simulation.sim import Simulator
 from analysis.visualisation import TrajectoryPlotter
 from analysis.energies import EnergyPlotter
 import numpy as np
@@ -10,17 +10,22 @@ import numpy as np
 savepath = "C:\\Users\\victo\\Documents\\Uni\\COP\\"
 #savepath = "/net/vdesk/data2/buiten/COP/"
 
-box = BoxBase((100,100))
-atoms = Particles(2,2)
-atoms.positions = np.array([[2.,4.9], [18.,5.1]])
-atoms.velocities = np.array([[0.09,0], [-0.09,0.]])
-worker = NBodyWorker(atoms, box, timestep=0.01)
-worker.evolve(10, timestep_external=0.1, savefile=savepath+"collision-test.hdf")
+dt = 0.001
+speed = 1
+n_atoms = 6
+
+box = BoxBase(1e-2, n_atoms, 2)
+atoms = Particles(n_atoms,2)
+atoms.positions = np.array([[2.,5.0], [10.,5.1], [6.,8.], [6.1,2.], [15.,10.], [13.,10.1]])
+atoms.velocities = np.array([[speed,0.], [-speed,0.], [0.,-speed], [0.,speed], [-speed,0.], [speed,0.]])
+worker = Simulator(atoms, box, timestep=dt)
+worker.evolve(25, timestep_external=0.1, savefile=savepath+"collision-test.hdf")
 
 plotter = TrajectoryPlotter(savepath+"collision-test.hdf")
-plotter.plot(0,len(plotter.history.times)+1)
+plotter.scatter(0,len(plotter.history.times)+1)
 plotter.show()
 
 energy_plotter = EnergyPlotter(savepath+"collision-test.hdf")
 energy_plotter.plotAll()
+energy_plotter.ax.set_yscale("linear")
 energy_plotter.show()

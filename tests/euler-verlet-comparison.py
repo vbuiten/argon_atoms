@@ -2,7 +2,7 @@
 
 from framework.box import BoxBase
 from framework.particles import Particles
-from simulation.sim import NBodyWorker
+from simulation.sim import Simulator
 from analysis.visualisation import TrajectoryPlotter
 from analysis.energies import EnergyPlotter
 import numpy as np
@@ -10,18 +10,17 @@ import numpy as np
 savepath = "C:\\Users\\victo\\Documents\\Uni\\COP\\"
 #savepath = "/net/vdesk/data2/buiten/COP/"
 
-box = BoxBase((100,100))
-atoms = Particles(5,2)
-atoms.positions = box.edges
-atoms.temperature = 100
-print ("Initial velocities:", atoms.velocities)
-workerVerlet = NBodyWorker(atoms, box, timestep=0.01)
-workerVerlet.evolve(50, timestep_external=1., savefile=savepath+"verlet-test.hdf")
-print ("Velocities after integrating:", atoms.velocities)
+n_atoms = 10
 
-workerEuler = NBodyWorker(atoms, box, timestep=0.01)
-workerEuler.evolve(50, timestep_external=1., savefile=savepath+"euler-test.hdf",
-                   method="Euler")
+box = BoxBase(0.1, n_atoms, 3)
+atoms = Particles(n_atoms,3)
+atoms.positions = box.edges
+atoms.temperature = 3.0
+workerVerlet = Simulator(atoms, box, timestep=0.01, minimage=True)
+workerVerlet.evolve(50, timestep_external=1., savefile=savepath+"verlet-test.hdf")
+
+workerEuler = Simulator(atoms, box, timestep=0.01, method="Euler")
+workerEuler.evolve(50, timestep_external=1., savefile=savepath+"euler-test.hdf")
 
 
 plotterVerlet = TrajectoryPlotter(savepath+"verlet-test.hdf")

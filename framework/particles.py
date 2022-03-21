@@ -10,12 +10,15 @@ class Particles:
         self.dim = dim
         self.mass = mass
 
+        '''
         if unitscaler is None:
             self.unitscaler = UnitScaler()
         elif isinstance(unitscaler, UnitScaler):
             self.unitscaler = unitscaler
         else:
             raise TypeError("Invalid unitscaler given.")
+            
+        '''
 
         self.savefile = None
 
@@ -35,8 +38,15 @@ class Particles:
             # generate random positions from a uniform distribution
             # pos can be passed as an array containing the edges of the box
 
-            position = np.random.uniform(low=pos[:,0], high=pos[:,1], size=(self.n_atoms, self.dim))
-            self._positions = position
+            #position = np.random.uniform(low=pos[:,0], high=pos[:,1], size=(self.n_atoms, self.dim))
+            #self._positions = position
+
+            lengths = pos[:,1] - pos[:,0]
+            n_units = int((self.n_atoms / (self.dim + 1))**(1/self.dim))
+            unitlength = lengths[0] / 3
+
+            self._positions = initialiseLattice(unitlength, self.dim, n_units)
+
 
         else:
             print ("Invalid argument given.")
@@ -50,48 +60,44 @@ class Particles:
 
     @velocities.setter
     def velocities(self, vel):
-        try:
+        if isinstance(vel, np.ndarray):
             if vel.shape == (self.n_atoms, self.dim):
                 self._velocities = vel
+                #print ("Velocities set.")
 
             else:
-                print ("Given velocities have incorrent dimensions.")
+                print ("Given velocities have incorrect dimensions.")
 
-        except:
+        else:
             # the user will give a standard deviation for the gaussian
             # generate random positions from a gaussian
-            # we'll probably want to change this to a Maxwell-Boltzmann distribution
-            mean = np.zeros(self.dim)
-            cov = np.diag(vel * np.ones(self.dim))
-            gauss = multivariate_normal(mean=mean, cov=cov)
-            self._velocities = gauss.rvs(size=(self.n_atoms))
+            mean = 0.
+            scale = vel
+            self._velocities = np.random.normal(mean, scale, size=(self.n_atoms, self.dim))
 
 
     @property
     def temperature(self):
+        '''Calculate the actual temperature given the particles' velocities.'''
+
+        self._temperature = np.mean(self.velocities**2)
+
         return self._temperature
 
     @temperature.setter
-    def temperature(self, temp):
+    def temperature(self, dimlessTemp):
         '''Draws random particle velocities using the given real temperature in K.'''
 
-        self._temperature = temp
-        self.dimlessTemp = self.unitscaler.toDimlessTemperature(temp)
-        mean = np.zeros(self.dim)
-        cov = np.diag(np.sqrt(self.dimlessTemp) * np.ones(self.dim))
-        print (cov)
-        gauss = multivariate_normal(mean=mean, cov=cov)
-        self._velocities = gauss.rvs(size=(self.n_atoms))
+        self.dimlessTemp = dimlessTemp
+        self.velocities = np.sqrt(self.dimlessTemp)
+
+        self._temperature = dimlessTemp
 
 
     def kineticEnergy(self):
         '''Computes the kinetic energy of the particles (in dimensionless units).'''
 
-        velsquared = np.zeros(self.n_atoms)
-        for i in range(self.n_atoms):
-            velsquared[i] = np.dot(self.velocities[i], self.velocities[i])
-
-        kinetic_energy = 0.5 * np.sum(velsquared)
+        kinetic_energy = 0.5 * np.sum(self.velocities**2)
 
         return kinetic_energy
 
@@ -130,3 +136,27 @@ class Particles:
         file = h5py.File(self.savefile, "r+")
         dataset = file["/particles"]
         dataset["positions"].append(self.positions)
+
+
+def initialiseLattice(unitlength, dim=3, units=3):
+
+    positions = []
+
+    if dim == 2:
+        for i in range(units):
+            for j in range(units):
+                positions.append([i,j])
+                positions.append([i,j+0.5])
+                positions.append([i+0.5,j])
+
+    elif dim == 3:
+        for i in range(units):
+            for j in range(units):
+                for k in range(units):
+                    positions.append([i,j,k])
+                    positions.append([i,j,k+0.5])
+                    positions.append([i,j+0.5,k])
+                    positions.append([i+0.5,j,k])
+
+
+    return np.array(positions) * unitlength

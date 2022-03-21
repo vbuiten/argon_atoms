@@ -11,15 +11,18 @@ class History:
         dset_pos = datafile["position-history"]
         dset_vel = datafile["velocity-history"]
         dset_energy = datafile["energy-history"]
+        dset_times = datafile["times"]
 
         self.pos = np.copy(dset_pos)
         self.vel = np.copy(dset_vel)
         self.energies = np.copy(dset_energy)
 
-        self.times = np.copy(dset_pos.attrs["times"])
+        self.times = np.copy(dset_times)
         self.dim = self.pos.shape[-1]
         self.n_atoms = self.pos.shape[1]
         self.box_edges = dset_pos.attrs["box-edges"]
+        self.temperature = dset_pos.attrs["temperature"]
+        self.density = dset_pos.attrs["density"]
 
         datafile.close()
 
