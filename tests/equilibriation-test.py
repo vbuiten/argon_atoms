@@ -9,22 +9,22 @@ from analysis.energies import EnergyPlotter
 import numpy as np
 import matplotlib.pyplot as plt
 
-savepath = "C:\\Users\\victo\\Documents\\Uni\\COP\\"
-#savepath = "/net/vdesk/data2/buiten/COP/"
+#savepath = "C:\\Users\\victo\\Documents\\Uni\\COP\\"
+savepath = "/net/vdesk/data2/buiten/COP/"
 
 n_atoms = 108
 
-box = BoxBase(1.2, n_atoms, 3)
+box = BoxBase(0.8, n_atoms, 3)
 atoms = Particles(n_atoms,3)
 atoms.positions = box.edges
-atoms.temperature = 0.5
+atoms.temperature = 1.0
 
 forces = minimumImageForces(atoms.positions, box.lengths)
-print(atoms.positions)
+#print(atoms.positions)
 #print(forces*0.01)
 
 #print ("Initial velocities:", atoms.velocities)
-workerVerlet = NBodyWorker(atoms, box, timestep=0.01, minimage=True, method="Verlet")
+workerVerlet = NBodyWorker(atoms, box, timestep=0.001, minimage=True, method="Verlet")
 Efracs = workerVerlet.equilibriate(iterations=10, threshold=0.1, iteration_time=10)
 workerVerlet.evolve(20, timestep_external=0.1, savefile=savepath+"verlet-test.hdf")
 #print ("Velocities after integrating:", atoms.velocities)

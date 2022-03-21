@@ -1,7 +1,9 @@
 '''Module containing utility functions for doing argon simulations.'''
 
 import numpy as np
+from numba import jit
 
+@jit(nopython=True, parallel=False)
 def distanceFromPosition(pos1, pos2):
     '''Calculates the distance between 1D arrays pos1 and pos2.'''
 
@@ -10,14 +12,14 @@ def distanceFromPosition(pos1, pos2):
 
     return dist
 
-
+@jit(nopython=True, parallel=False)
 def posInBox(pos, lengths):
     '''Simple function for shifting a particle position inside the box.'''
 
     pos = (pos + 2*lengths) % lengths
     return pos
 
-
+@jit(nopython=True, parallel=False)
 def minimumImageForces(positions, lengths):
 
     forces = np.zeros(positions.shape)
@@ -34,7 +36,7 @@ def minimumImageForces(positions, lengths):
 
     return forces
 
-
+@jit(nopython=True, parallel=False)
 def LennardJonesForce(pos1, pos_others, soft_eps=1e-10):
     '''
     Computes the dimensionless force acting on the particle with position 1 due to a Lennard-Jones potential
@@ -76,7 +78,7 @@ def LennardJonesForce(pos1, pos_others, soft_eps=1e-10):
 
     return totalForce
 
-
+@jit(nopython=True, parallel=False)
 def LennardJonesPotential(pos1, pos_others, soft_eps=1e-10):
 
     distances = np.zeros(len(pos_others))

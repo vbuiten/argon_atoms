@@ -19,6 +19,57 @@ class NBodyWorker:
         self.minimage = minimage
 
 
+    def evolutionStep(self, step_idx, current_pos=None, old_pos=None):
+
+        if self.minimage:
+            # first compute the force acting on each particle
+            forces = minimumImageForces(self.bodies.positions, self.box.lengths)
+
+        else:
+            # compute forces without minimum image convention
+            forces = np.zeros(self.bodies.positions.shape)
+            for i in range(len(forces)):
+                pos = self.bodies.positions[i]
+                pos_others = np.concatenate((self.bodies.positions[:i], self.bodies.positions[i + 1:]))
+                forces[i] = LennardJonesForce(pos, pos_others)
+
+        # update positions and velocities
+        # use the user-specified algorithm
+        if self.method == "Euler":
+            newpos = self.bodies.positions + self.timestep * self.bodies.velocities
+            newpos = posInBox(newpos, self.box.lengths)
+
+            newvel = self.bodies.velocities + self.timestep * forces
+
+        elif self.method == "Verlet":
+
+            if step_idx == 0:
+                # compute the "previous set" of positions (backward Euler)
+                # these have to ignore the "stay in box" condition!
+                old_pos = self.bodies.positions - self.timestep * self.bodies.velocities
+                # old_pos = self.bodies.positions + pos_subtract
+                current_pos = np.copy(self.bodies.positions)
+
+            newpos = 2 * current_pos - old_pos + self.timestep ** 2 * forces
+
+            # compute velocity before shifting positions to stay inside the box
+            newvel = (newpos - old_pos) / (2 * self.timestep)
+
+            # save the current positions as "old positions" for the next iteration
+            old_pos = np.copy(current_pos)
+            current_pos = np.copy(newpos)
+
+            newpos = posInBox(newpos, self.box.lengths)
+
+        else:
+            raise ValueError("Invalid integration method given. Use 'Euler' or 'Verlet'.")
+
+        self.bodies.positions = newpos
+        self.bodies.velocities = newvel
+
+        return current_pos, old_pos
+
+
     def saveToFile(self, savefile, times):
 
         file = h5py.File(savefile, "w")
@@ -61,8 +112,14 @@ class NBodyWorker:
 
             # run the simulation for a time iteration_time
 
+            self.evolve(iteration_time)
+
+            '''
             for idx, time in enumerate(times):
 
+                current_pos, old_pos = self.evolutionStep(idx, current_pos, old_pos)
+
+                
                 if self.minimage:
                     # first compute the force acting on each particle
                     forces = minimumImageForces(self.bodies.positions, self.box.lengths)
@@ -107,9 +164,7 @@ class NBodyWorker:
 
                 self.bodies.positions = newpos
                 self.bodies.velocities = newvel
-
-            #self.evolve(self.time+iteration_time)
-            #self.evolve(iteration_time)
+                '''
 
             # measure the new kinetic energy after evolving
             real_kinetic_energy = self.bodies.kineticEnergy()
@@ -132,10 +187,13 @@ class NBodyWorker:
 
                 print ("Rescaled velocities.")
 
+            else:
+                break
+
 
         print ("Equilibriation complete.")
 
-        #self.time = 0
+        self.time = 0
         return energy_fractions
 
 
@@ -143,30 +201,30 @@ class NBodyWorker:
         '''TO DO: fix backwards Euler for periodic boundary conidtions'''
 
         times = np.arange(self.time, self.time+t_end, self.timestep)
-        times_external = []
 
-        #pos_history = np.zeros((len(times_external), len(self.bodies), self.box.dim))
-        #vel_history = np.zeros((len(times_external), len(self.bodies), self.box.dim))
-        pos_history = []
-        vel_history = []
-        kinetic_energy = []
-        potential_energy = []
+        if savefile is not None:
+            times_external = []
+            pos_history = []
+            vel_history = []
+            kinetic_energy = []
+            potential_energy = []
 
         length = self.box.length
 
         for idx, time in enumerate(times):
 
-            # save the current state of the system
-            if (time - self.time)/timestep_external % 1 == 0:
-                times_external.append(time)
-                print ("Time:", time)
-                #print ("Forces:", forces)
-                pos_history.append(self.bodies.positions)
-                vel_history.append(self.bodies.velocities)
-                kinetic_energy.append(self.bodies.kineticEnergy())
+            if savefile is not None:
+                # save the current state of the system
+                if (time - self.time)/timestep_external % 1 == 0:
+                    times_external.append(time)
+                    print ("Time:", time)
+                    #print ("Forces:", forces)
+                    pos_history.append(self.bodies.positions)
+                    vel_history.append(self.bodies.velocities)
+                    kinetic_energy.append(self.bodies.kineticEnergy())
 
-                # computationally expensive potential energy calculation
-                potential_energy.append(self.bodies.potentialEnergy(length))
+                    # computationally expensive potential energy calculation
+                    potential_energy.append(self.bodies.potentialEnergy(length))
 
             # now evolve the system to the next step
 
@@ -216,19 +274,17 @@ class NBodyWorker:
             self.bodies.positions = newpos
             self.bodies.velocities = newvel
 
-        # total energy
-        total_energy = np.array(kinetic_energy) + np.array(potential_energy)
-
-        pos_history = np.array(pos_history)
-        vel_history = np.array(vel_history)
-        energy_history = np.array([times_external, kinetic_energy, potential_energy, total_energy]).T
-            #pos_history[idx] = self.bodies.positions
-            #vel_history[idx] = self.bodies.velocities
-
         self.time = times[-1]
-        times_external = np.array(times_external)
 
         if savefile is not None:
+
+            times_external = np.array(times_external)
+            total_energy = np.array(kinetic_energy) + np.array(potential_energy)
+
+            pos_history = np.array(pos_history)
+            vel_history = np.array(vel_history)
+            energy_history = np.array([times_external, kinetic_energy, potential_energy, total_energy]).T
+
             # create a file
             self.pos_history = pos_history
             self.vel_history = vel_history
