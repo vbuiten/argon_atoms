@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.stats import multivariate_normal
 import h5py
-from simulation.utils import LennardJonesPotential, UnitScaler
+from simulation.utils import LennardJonesPotential, minimumImagePositions, distanceFromPosition
 
 class Particles:
     '''Class for handling a set of n_atoms particles.'''
@@ -111,14 +111,36 @@ class Particles:
             # make sure not to count pairs twice
             pos_others = self.positions[i+1:]
 
+            pos_others = minimumImagePositions(pos, pos_others, box_length)
+
+            '''
             # use the minimum image convention
             pos_diff = pos_others - pos
             pos_others = pos_others - box_length * np.rint(pos_diff/box_length)
+            '''
             potential[i] = LennardJonesPotential(pos, pos_others)
 
         potential_energy = np.sum(potential)
 
         return potential_energy
+
+
+    def pairDistances(self, box_length):
+        '''Computes the distances between all pairs of particles in the simulation.'''
+
+        distances = np.zeros((self.n_atoms, self.n_atoms-1))
+
+        for i in range(self.n_atoms):
+
+            pos = self.positions[i]
+            pos_others = np.concatenate([self.positions[:i], self.positions[i+1:]])
+            nearest_positions = minimumImagePositions(pos, pos_others, box_length)
+
+            for j, other_pos in enumerate(nearest_positions):
+                distances[i,j] = distanceFromPosition(pos, other_pos)
+
+        return distances
+
 
     def createFile(self, savefile):
         self.savefile = savefile

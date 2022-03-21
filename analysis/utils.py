@@ -42,7 +42,8 @@ def load_history(historyfile):
 
 
 class PlotPreferences:
-    def __init__(self, usetex=False, markersize=3, figsize=(7,5), dpi=240):
+    def __init__(self, usetex=False, markersize=3, figsize=(7,5), dpi=240,\
+                 marker="o"):
 
         if usetex:
             plt.rcParams["text.usetex"] = True
@@ -51,5 +52,6 @@ class PlotPreferences:
             plt.rcParams["font.family"] = "serif"
 
         self.markersize = markersize
+        self.marker = marker
         self.figsize = figsize
         self.dpi = dpi

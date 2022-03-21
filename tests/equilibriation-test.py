@@ -25,8 +25,8 @@ forces = minimumImageForces(atoms.positions, box.lengths)
 
 #print ("Initial velocities:", atoms.velocities)
 workerVerlet = Simulator(atoms, box, timestep=0.001, minimage=True, method="Verlet")
-Efracs = workerVerlet.equilibriate(iterations=10, threshold=0.1, iteration_time=10)
-workerVerlet.evolve(20, timestep_external=0.01, savefile=savepath+"verlet-test.hdf")
+Efracs = workerVerlet.equilibriate(iterations=20, threshold=0.01, iteration_time=10)
+workerVerlet.evolve(50, timestep_external=0.1, savefile=savepath+"verlet-test.hdf")
 #print ("Velocities after integrating:", atoms.velocities)
 
 fig, ax = plt.subplots()

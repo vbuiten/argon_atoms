@@ -19,6 +19,16 @@ def posInBox(pos, lengths):
     pos = (pos + 2*lengths) % lengths
     return pos
 
+
+@jit(nopython=True)
+def minimumImagePositions(position, pos_others, lengths):
+
+    pos_diff = position - pos_others
+    nearest_positions = pos_others + lengths * np.rint(pos_diff/lengths)
+
+    return nearest_positions
+
+
 @jit(nopython=True, parallel=False)
 def minimumImageForces(positions, lengths):
 
@@ -28,10 +38,14 @@ def minimumImageForces(positions, lengths):
         pos = positions[i]
         pos_others = np.concatenate((positions[:i], positions[i+1:]))
 
+        nearest_positions = minimumImagePositions(pos, pos_others, lengths)
+
+        '''
         pos_diff = pos - pos_others
         nearest_positions = pos_others + lengths * np.rint(pos_diff/lengths)
         #pos_diff = pos_others - pos
         #nearest_positions = pos_others - lengths * np.rint(pos_diff/lengths)
+        '''
         forces[i] = LennardJonesForce(pos, nearest_positions)
 
     return forces
