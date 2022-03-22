@@ -85,8 +85,7 @@ class PlotPreferences:
         if usetex:
             plt.rcParams["text.usetex"] = True
 
-        else:
-            plt.rcParams["font.family"] = "serif"
+        plt.rcParams["font.family"] = "serif"
 
         self.markersize = markersize
         self.marker = marker

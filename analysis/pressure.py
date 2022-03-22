@@ -48,12 +48,12 @@ class VirialPressure(RepeatedSimsBase):
 
         self.ax.hist(self.pressures, alpha=0.7, bins="sqrt")
         self.ax.axvline(self.pressure_avg, ls="--", color="black", label="Mean")
-        self.ax.axvline(self.pressure_68p[0], ls=":", color="black", label="68% interval")
+        self.ax.axvline(self.pressure_68p[0], ls=":", color="black", label="68\% interval")
         self.ax.axvline(self.pressure_68p[1], ls=":", color="black")
 
         self.ax.legend()
         self.ax.set_xlabel("Dimensionless pressure")
-        self.ax.set_ylabel("# occurrences")
+        self.ax.set_ylabel("Occurrences")
 
         self.ax.set_title(r"$\rho = $"+str(np.around(self.density,3))+r"; $T = $"+str(np.around(self.temperature,3)))
 
