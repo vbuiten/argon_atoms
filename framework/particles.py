@@ -1,6 +1,6 @@
 import numpy as np
 import h5py
-from simulation.utils import LennardJonesPotential, minimumImagePositions, distanceFromPosition
+from simulation.utils import LennardJonesPotential, minimumImagePositions, distanceSquaredFromPosition
 
 class Particles:
     '''Class for handling a set of n_atoms particles.'''
@@ -127,7 +127,7 @@ class Particles:
     def pairDistances(self, box_length):
         '''Computes the distances between all pairs of particles in the simulation.'''
 
-        distances = np.zeros((self.n_atoms, self.n_atoms-1))
+        distances2 = np.zeros((self.n_atoms, self.n_atoms-1))
 
         for i in range(self.n_atoms):
 
@@ -136,7 +136,9 @@ class Particles:
             nearest_positions = minimumImagePositions(pos, pos_others, box_length)
 
             for j, other_pos in enumerate(nearest_positions):
-                distances[i,j] = distanceFromPosition(pos, other_pos)
+                distances2[i,j] = distanceSquaredFromPosition(pos, other_pos)
+
+        distances = np.sqrt(distances2)
 
         return distances
 

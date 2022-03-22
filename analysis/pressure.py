@@ -1,7 +1,7 @@
 ''''Module for computing the pressure in a system of particles.'''
 
 import numpy as np
-from simulation.utils import distanceFromPosition, minimumImagePositions
+from simulation.utils import distanceSquaredFromPosition, minimumImagePositions
 from framework.particles import Particles
 from analysis.utils import RepeatedSimsBase, PlotPreferences
 import matplotlib.pyplot as plt
@@ -20,11 +20,11 @@ class VirialPressure(RepeatedSimsBase):
 
                 pos_others = minimumImagePositions(position, set.positions[idx+1:], box_lengths)
 
-                distances = np.zeros(len(pos_others))
+                distances2 = np.zeros(len(pos_others))
                 for j in range(len(pos_others)):
-                    distances[j] = distanceFromPosition(position, pos_others[j])
+                    distances2[j] = distanceSquaredFromPosition(position, pos_others[j])
 
-                terms_particles[idx] = np.sum(distances**(-6) - 2 * distances**(-12))
+                terms_particles[idx] = np.sum(distances2**(-3) - 2 * distances2**(-6))
 
             potential_terms[i] = np.sum(terms_particles)
 

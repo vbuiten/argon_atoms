@@ -4,7 +4,7 @@ import numpy as np
 from numba import jit
 
 @jit(nopython=True, parallel=False)
-def distanceFromPosition(pos1, pos2):
+def distanceSquaredFromPosition(pos1, pos2):
     '''Calculates the distance between 1D arrays pos1 and pos2.'''
 
     diffVector = pos2 - pos1
@@ -66,17 +66,15 @@ def LennardJonesForce(pos1, pos_others, soft_eps=1e-10):
     totalForce (ndarray): Cartesian components of the force acting on the particle
     '''
 
-    distances = np.zeros(len(pos_others))
+    distances2 = np.zeros(len(pos_others))
 
     for i in range(len(pos_others)):
-        distances[i] = distanceFromPosition(pos1, pos_others[i])
-    if np.sum(distances < 0) > 0:
-        print ("Negative distances detected.")
+        distances2[i] = distanceSquaredFromPosition(pos1, pos_others[i])
 
     # array calculations for speed
     # these are all 1D arrays of length n_other_particles
-    termPauli = -6 / (distances**6 + soft_eps)
-    termWaals = 12 / (distances**12 + soft_eps)
+    termPauli = -6 / (distances2**3 + soft_eps)
+    termWaals = 12 / (distances2**6 + soft_eps)
 
     # now compute the relative position vector x_i - x_j for each particle j
     # shape is (n_other_particles, dim)
@@ -86,7 +84,7 @@ def LennardJonesForce(pos1, pos_others, soft_eps=1e-10):
     # numpy can't automatically broadcast 2D and 1D --> loop over dimensions
     forceTerms = np.zeros(relativePositions.shape)
     for dim in range(relativePositions.shape[-1]):
-        forceTerms[:,dim] = relativePositions[:,dim]/(distances**2 + soft_eps) * (termPauli + termWaals)
+        forceTerms[:,dim] = relativePositions[:,dim]/(distances2 + soft_eps) * (termPauli + termWaals)
 
     totalForce = 4 * np.sum(forceTerms, axis=0)
 
@@ -95,13 +93,13 @@ def LennardJonesForce(pos1, pos_others, soft_eps=1e-10):
 @jit(nopython=True, parallel=False)
 def LennardJonesPotential(pos1, pos_others, soft_eps=1e-10):
 
-    distances = np.zeros(len(pos_others))
+    distances2 = np.zeros(len(pos_others))
 
     for i in range(len(pos_others)):
-        distances[i] = distanceFromPosition(pos1, pos_others[i])
+        distances2[i] = distanceSquaredFromPosition(pos1, pos_others[i])
 
-    termPauli = -1./(distances**6 + soft_eps)
-    termWaals = 1./(distances**12 + soft_eps)
+    termPauli = -1./(distances2**3 + soft_eps)
+    termWaals = 1./(distances2**6 + soft_eps)
 
     potential_terms = termWaals + termPauli
     potential = 4 * np.sum(potential_terms)
