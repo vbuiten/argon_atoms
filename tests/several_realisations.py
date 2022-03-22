@@ -7,8 +7,8 @@ from analysis.correlation import DistanceHistogram, CorrelationFunction
 from analysis.pressure import VirialPressure
 from analysis.utils import PlotPreferences
 
-savepath = "C:\\Users\\victo\\Documents\\Uni\\COP\\"
-#savepath = "/net/vdesk/data2/buiten/COP/"
+#savepath = "C:\\Users\\victo\\Documents\\Uni\\COP\\"
+savepath = "/net/vdesk/data2/buiten/COP/"
 
 plotprefs = PlotPreferences(usetex=True)
 

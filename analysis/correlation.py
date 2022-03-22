@@ -48,6 +48,8 @@ class DistanceHistogram(RepeatedSimsBase):
 
         if plotprefs is None:
             self.plotprefs = PlotPreferences(markersize=3, marker="s")
+        else:
+            self.plotprefs = plotprefs
 
         self.fig, self.ax = plt.subplots(figsize=self.plotprefs.figsize, dpi=self.plotprefs.dpi)
 
