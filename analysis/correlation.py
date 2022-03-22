@@ -11,15 +11,15 @@ from scipy.interpolate import interp1d
 class DistanceHistogram(RepeatedSimsBase):
     '''Create a histogram of the distances between pairs of particles.'''
 
-    def __init__(self, particles, box_lengths, bins=10, plotprefs=None):
+    def __init__(self, particles, box_lengths, bins=100, plotprefs=None):
 
         super().__init__(particles, box_lengths)
 
-        self.distances = np.zeros((len(particles), self.n_atoms, self.n_atoms-1))
+        self.distances = np.zeros((len(self.particles), self.n_atoms, self.n_atoms-1))
 
-        for idx, el in enumerate(particles):
+        for idx, set in enumerate(self.particles):
 
-            self.distances[idx] = el.pairDistances(box_lengths)
+            self.distances[idx] = set.pairDistances(box_lengths)
 
         if isinstance(bins, int):
             min_edge, max_edge = 0., self.distances.max()
@@ -53,13 +53,12 @@ class DistanceHistogram(RepeatedSimsBase):
 
         self.fig, self.ax = plt.subplots(figsize=self.plotprefs.figsize, dpi=self.plotprefs.dpi)
 
-        self.ax.set_xlabel(r"Distance")
-        self.ax.set_ylabel(r"# of occurrences")
-
 
     def plotTotal(self):
 
         self.ax.plot(self.bin_mids, self.counts, marker=self.plotprefs.marker)
+        self.ax.set_xlabel(r"Distance")
+        self.ax.set_ylabel(r"Occurrences")
 
 
     def plotIterationAveraged(self):
@@ -69,6 +68,8 @@ class DistanceHistogram(RepeatedSimsBase):
         self.ax.fill_between(self.bin_mids, self.counts_68p[0], self.counts_68p[1], alpha=0.3,
                              label="68% confidence interval")
 
+        self.ax.set_xlabel(r"Distance")
+        self.ax.set_ylabel(r"Occurrences")
         self.ax.set_title("Averaged over "+str(self.n_iterations)+" Realisations")
         self.ax.legend()
 
@@ -84,7 +85,7 @@ class DistanceHistogram(RepeatedSimsBase):
 
 
 class CorrelationFunction(DistanceHistogram):
-    def __init__(self, particles, box_lengths, bins=10, plotprefs=None):
+    def __init__(self, particles, box_lengths, bins=100, plotprefs=None):
         super().__init__(particles, box_lengths, bins, plotprefs)
 
         factor1 = 2 * self.volume / (self.n_atoms * (self.n_atoms - 1))
@@ -108,6 +109,7 @@ class CorrelationFunction(DistanceHistogram):
         self.ax.scatter(self.corr_length, 1., color="red", s=self.plotprefs.markersize,
                         label="Estimated correlation length")
 
+        self.ax.set_xlabel(r"Distance")
         self.ax.set_ylabel(r"Correlation Function $g(r)$")
         self.ax.set_title(r"$\rho = $" + str(np.around(self.density, 3)) + r"; $T = $" + str(np.around(self.temperature, 3)))
         self.ax.legend()

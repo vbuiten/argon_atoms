@@ -1,7 +1,6 @@
 import h5py
 import numpy as np
 import matplotlib.pyplot as plt
-from framework.particles import Particles
 
 class History:
     def __init__(self, filename):
@@ -42,6 +41,14 @@ def load_history(historyfile):
     return history
 
 
+class ParticlesFromHistory:
+    def __init__(self, history):
+
+        self.history = load_history(history)
+
+
+
+
 class PlotPreferences:
     def __init__(self, usetex=False, markersize=3, figsize=(7,5), dpi=240,\
                  marker="o"):
@@ -64,13 +71,15 @@ class RepeatedSimsBase:
 
     def __init__(self, particles, box_lengths):
 
-        if isinstance(particles, Particles):
-            particles = [particles]
+        if isinstance(particles, list):
+            self.particles = particles
+        else:
+            self.particles = [particles]
 
         self.box_lengths = box_lengths
-        self.n_iterations = len(particles)
-        self.n_atoms = particles[0].n_atoms
-        self.dim = particles[0].dim
+        self.n_iterations = len(self.particles)
+        self.n_atoms = self.particles[0].n_atoms
+        self.dim = self.particles[0].dim
 
         if isinstance(self.box_lengths, np.ndarray) and len(self.box_lengths.shape) == 1:
             self.volume = self.box_lengths[0] ** self.dim
@@ -81,5 +90,5 @@ class RepeatedSimsBase:
         else:
             raise ValueError("Invalid box_lengths given. Give either a 1D array or a float.")
 
-        self.temperature = particles[0].temperature
+        self.temperature = self.particles[0].temperature
         self.density = self.n_atoms / self.volume
