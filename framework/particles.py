@@ -1,8 +1,6 @@
 import numpy as np
-from scipy.stats import multivariate_normal
 import h5py
 from simulation.utils import LennardJonesPotential, minimumImagePositions, distanceFromPosition
-from analysis.utils import load_history
 
 class Particles:
     '''Class for handling a set of n_atoms particles.'''
@@ -25,16 +23,6 @@ class Particles:
 
     def __len__(self):
         return self.n_atoms
-
-
-    def loadFromHistory(self, history, idx=-1):
-
-        self.history = load_history(history)
-
-        self.positions = self.history.pos[idx]
-        self.velocities = self.history.vel[idx]
-        self.box_edges = self.history.box_edges
-
 
     @property
     def positions(self):

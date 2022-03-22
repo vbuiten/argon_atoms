@@ -1,6 +1,9 @@
 import h5py
 import numpy as np
 import matplotlib.pyplot as plt
+import os
+from framework.particles import Particles
+from framework.box import BoxBase
 
 class History:
     def __init__(self, filename):
@@ -41,12 +44,38 @@ def load_history(historyfile):
     return history
 
 
-class ParticlesFromHistory:
-    def __init__(self, history):
+class ParticlesFromHistory(Particles):
+    '''Class for loading a single particle set from a file of simulation results,
+    as well as the box used to run the simulations in. By default, the last configuration
+    in the particle history is loaded.'''
+
+    def __init__(self, history, time_idx=-1):
 
         self.history = load_history(history)
 
+        super().__init__(self.history.n_atoms, self.history.dim)
+        self.positions = self.history.pos[time_idx]
+        self.velocities = self.history.pos[time_idx]
 
+        self.box = BoxBase(self.history.density, self.n_atoms, dim=self.dim)
+
+
+class SimulationIterations:
+    '''Class for loading a series of iterations of a simulation, all stored in datafolder.'''
+
+    def __init__(self, datafolder):
+
+        files_list = os.listdir(datafolder)
+        self.histories = []
+        self.final_particles = []
+
+        for i, f in enumerate(files_list):
+            if f.endswith(".hdf5") or f.endswith(".hdf"):
+                self.histories.append(load_history(f))
+                self.final_particles.append(ParticlesFromHistory(self.histories[i]))
+
+        self.datafolder = datafolder
+        self.box = self.final_particles[0].box
 
 
 class PlotPreferences:
