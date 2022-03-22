@@ -66,7 +66,7 @@ class DistanceHistogram(RepeatedSimsBase):
         self.ax.plot(self.bin_mids, self.counts_avg, markersize=self.plotprefs.markersize, marker=self.plotprefs.marker,
                      label="Mean")
         self.ax.fill_between(self.bin_mids, self.counts_68p[0], self.counts_68p[1], alpha=0.3,
-                             label="68% confidence interval")
+                             label="68\% interval")
 
         self.ax.set_xlabel(r"Distance")
         self.ax.set_ylabel(r"Occurrences")
@@ -107,7 +107,7 @@ class CorrelationFunction(DistanceHistogram):
 
         self.ax.axhline(1., color="black", ls="--", label=r"$g(r) = 1$")
         self.ax.scatter(self.corr_length, 1., color="red", s=self.plotprefs.markersize,
-                        label="Estimated correlation length")
+                        label="Estimated correlation length", marker=self.plotprefs.marker)
 
         self.ax.set_xlabel(r"Distance")
         self.ax.set_ylabel(r"Correlation Function $g(r)$")
