@@ -9,8 +9,8 @@ from analysis.energies import EnergyPlotter, EquilibrationPlotter
 import numpy as np
 import matplotlib.pyplot as plt
 
-#savepath = "C:\\Users\\victo\\Documents\\Uni\\COP\\"
-savepath = "/net/vdesk/data2/buiten/COP/"
+savepath = "C:\\Users\\victo\\Documents\\Uni\\COP\\"
+#savepath = "/net/vdesk/data2/buiten/COP/"
 
 n_atoms = 108
 
@@ -26,7 +26,7 @@ forces = minimumImageForces(atoms.positions, box.lengths)
 #print ("Initial velocities:", atoms.velocities)
 workerVerlet = Simulator(atoms, box, timestep=0.001, minimage=True, method="Verlet")
 Efracs = workerVerlet.equilibrate(iterations=20, threshold=0.01, iteration_time=10)
-workerVerlet.evolve(50, timestep_external=0.1, savefile=savepath+"verlet-test.hdf")
+workerVerlet.evolve(200, timestep_external=0.1, savefile=savepath+"verlet-test.hdf")
 #print ("Velocities after integrating:", atoms.velocities)
 
 equilibration_plotter = EquilibrationPlotter(Efracs)

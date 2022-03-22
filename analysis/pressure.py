@@ -37,7 +37,7 @@ class VirialPressure(RepeatedSimsBase):
         self.pressure_68p = np.percentile(self.pressures, [16.,84.])
 
         if plotprefs is None:
-            self.plotprefs = PlotPreferences(markersize=5, marker="s")
+            self.plotprefs = PlotPreferences(markersize=3, marker="s")
 
         self.fig, self.ax = plt.subplots(figsize=self.plotprefs.figsize, dpi=self.plotprefs.dpi)
         self.fig.suptitle("Pressure Measurements")
@@ -58,3 +58,8 @@ class VirialPressure(RepeatedSimsBase):
     def show(self):
 
         self.fig.show()
+
+
+    def save(self, savefile):
+
+        self.fig.savefig(savefile, bbox_inches="tight")

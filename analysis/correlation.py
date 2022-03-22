@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import framework.particles
 from simulation.utils import minimumImagePositions
 from analysis.utils import PlotPreferences, RepeatedSimsBase
+from scipy.interpolate import interp1d
 
 class DistanceHistogram(RepeatedSimsBase):
     '''Create a histogram of the distances between pairs of particles.'''
@@ -46,7 +47,7 @@ class DistanceHistogram(RepeatedSimsBase):
         self.counts_std = np.std(counts_iterations, axis=0)
 
         if plotprefs is None:
-            self.plotprefs = PlotPreferences(markersize=5, marker="s")
+            self.plotprefs = PlotPreferences(markersize=3, marker="s")
 
         self.fig, self.ax = plt.subplots(figsize=self.plotprefs.figsize, dpi=self.plotprefs.dpi)
 
@@ -75,6 +76,11 @@ class DistanceHistogram(RepeatedSimsBase):
         self.fig.show()
 
 
+    def save(self, savefile):
+
+        self.fig.savefig(savefile, bbox_inches="tight")
+
+
 class CorrelationFunction(DistanceHistogram):
     def __init__(self, particles, box_lengths, bins=10, plotprefs=None):
         super().__init__(particles, box_lengths, bins, plotprefs)
@@ -85,9 +91,10 @@ class CorrelationFunction(DistanceHistogram):
 
         self.g_error = factor1 * factor2 * self.counts_std
 
-        self.ax.set_ylabel(r"Correlation Function $g(r)$")
+        # estimate correlation length
+        self.corr_length = interp1d(self.g, self.bin_mids)(1.)
+
         self.fig.suptitle("Correlation Function")
-        self.ax.set_title(r"$\rho = $"+str(np.around(self.density,3))+r"; $T = $"+str(np.around(self.temperature,3)))
 
     def plot(self):
 
@@ -95,6 +102,19 @@ class CorrelationFunction(DistanceHistogram):
         self.ax.fill_between(self.bin_mids, self.g+self.g_error, self.g-self.g_error, alpha=0.3,
                              label=r"Estimated $1 \sigma$ error")
 
+        self.ax.axhline(1., color="black", ls="--", label=r"$g(r) = 1$")
+        self.ax.scatter(self.corr_length, 1., color="red", s=self.plotprefs.markersize,
+                        label="Estimated correlation length")
+
+        self.ax.set_ylabel(r"Correlation Function $g(r)$")
+        self.ax.set_title(r"$\rho = $" + str(np.around(self.density, 3)) + r"; $T = $" + str(np.around(self.temperature, 3)))
+        self.ax.legend()
+
     def show(self):
 
         self.fig.show()
+
+
+    def save(self, savefile):
+
+        self.fig.savefig(savefile, bbox_inches="tight")
