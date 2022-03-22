@@ -1,4 +1,4 @@
-'''Test file for experimenting with running several realisations of the same initial conditions.'''
+'''File for running 100 realisations of the solid conditions from lecture 5.'''
 
 from framework.box import BoxBase
 from framework.particles import Particles
@@ -6,32 +6,19 @@ from simulation.sim import Simulator
 from analysis.correlation import DistanceHistogram, CorrelationFunction
 from analysis.pressure import VirialPressure
 from analysis.utils import PlotPreferences, SimulationIterations
-import os
+from data.utils import folderPath
 
 plotprefs = PlotPreferences(usetex=True)
 
 n_atoms = 108
 iterations = 100
-temperature = 1.0
-density = 0.8
+temperature = 3.0
+density = 0.3
 
 box = BoxBase(density, n_atoms, 3)
 
-savepath = "C:\\Users\\victo\\Documents\\Uni\\COP\\"
-
-if not os.access(savepath, os.F_OK):
-    savepath = "/net/vdesk/data2/buiten/COP/"
-
-    foldername = "/dens"+str(density)+"-temp"+str(temperature)+"/"
-    folderpath = savepath+foldername
-
-else:
-    foldername = "\\dens"+str(density)+"-temp"+str(temperature)+"3.0\\"
-    folderpath = savepath+foldername
-
-if not os.access(folderpath, os.F_OK):
-    os.mkdir(folderpath)
-
+foldername = "/dens"+str(density)+"-temp"+str(temperature)+"/"
+folderpath = folderPath(foldername)
 
 for i in range(iterations):
     atoms = Particles(n_atoms,3)
