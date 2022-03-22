@@ -71,8 +71,9 @@ class SimulationIterations:
 
         for i, f in enumerate(files_list):
             if f.endswith(".hdf5") or f.endswith(".hdf"):
-                self.histories.append(load_history(f))
-                self.final_particles.append(ParticlesFromHistory(self.histories[i]))
+                history = load_history(datafolder+f)
+                self.histories.append(history)
+                self.final_particles.append(ParticlesFromHistory(history))
 
         self.datafolder = datafolder
         self.box = self.final_particles[0].box

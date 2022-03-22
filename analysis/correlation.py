@@ -97,21 +97,23 @@ class CorrelationFunction(DistanceHistogram):
         # estimate correlation length
         self.corr_length = interp1d(self.g, self.bin_mids)(1.)
 
-        self.fig.suptitle("Correlation Function")
+        self.fig.suptitle("Pair Correlation Function")
 
     def plot(self):
 
-        self.ax.plot(self.bin_mids, self.g, marker=self.plotprefs.marker, markersize=self.plotprefs.markersize)
+        self.ax.plot(self.bin_mids, self.g, marker=self.plotprefs.marker, markersize=self.plotprefs.markersize,
+                     alpha=0.8)
         self.ax.fill_between(self.bin_mids, self.g+self.g_error, self.g-self.g_error, alpha=0.3,
                              label=r"Estimated $1 \sigma$ error")
 
-        self.ax.axhline(1., color="black", ls="--", label=r"$g(r) = 1$")
-        self.ax.scatter(self.corr_length, 1., color="red", s=self.plotprefs.markersize,
-                        label="Estimated correlation length", marker=self.plotprefs.marker)
+        self.ax.axhline(1., color="black", ls="--", label=r"$g(r) = 1$", lw=1, alpha=0.8)
+        self.ax.plot(self.corr_length, 1., color="red", markersize=2*self.plotprefs.markersize,
+                        label="Estimated correlation length", marker=self.plotprefs.marker, ls="",
+                     alpha=0.8)
 
         self.ax.set_xlabel(r"Distance")
         self.ax.set_ylabel(r"Correlation Function $g(r)$")
-        self.ax.set_title(r"$\rho = $" + str(np.around(self.density, 3)) + r"; $T = $" + str(np.around(self.temperature, 3)))
+        self.ax.set_title(r"$\rho = $" + str(np.around(self.density, 2)) + r"; $T = $" + str(np.around(self.temperature, 2)))
         self.ax.legend()
 
     def show(self):

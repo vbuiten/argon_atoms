@@ -55,7 +55,7 @@ class VirialPressure(RepeatedSimsBase):
         self.ax.set_xlabel("Dimensionless pressure")
         self.ax.set_ylabel("Occurrences")
 
-        self.ax.set_title(r"$\rho = $"+str(np.around(self.density,3))+r"; $T = $"+str(np.around(self.temperature,3)))
+        self.ax.set_title(r"$\rho = $"+str(np.around(self.density,2))+r"; $T = $"+str(np.around(self.temperature,2)))
 
     def show(self):
 
