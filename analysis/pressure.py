@@ -25,7 +25,7 @@ def pressureFromParticles(particles, box_lengths, density, temperature):
             for j in range(len(pos_others)):
                 distances2[j] = distanceSquaredFromPosition(position, pos_others[j])
 
-            terms_particles[idx] = np.sum(distances2 ** (-3) - 2 * distances2 ** (-6))
+            terms_particles[idx] = np.sum(distances2 ** (-3) - 2 * distances2 ** (-3))
 
         potential_terms[i] = np.sum(terms_particles)
 
