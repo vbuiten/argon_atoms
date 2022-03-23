@@ -13,7 +13,7 @@ savepath = "C:\\Users\\victo\\Documents\\Uni\\COP\\"
 if not os.access(savepath, os.F_OK):
     savepath = "/net/vdesk/data2/buiten/COP/"
 
-    foldername = "/dens0.3-temp3.0/"
+    foldername = "/dens0.8-temp1.0/"
     folderpath = savepath+foldername
 
 else:

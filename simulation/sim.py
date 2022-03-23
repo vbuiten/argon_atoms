@@ -25,19 +25,19 @@ class Simulator:
         file = h5py.File(savefile, "w")
         pos_dataset = file.create_dataset("position-history", data=self.pos_history)
         vel_dataset = file.create_dataset("velocity-history", data=self.vel_history)
-        E_kin_dataset = file.create_dataset("energy-history", data=self.energy_history)
+        energy_dataset = file.create_dataset("energy-history", data=self.energy_history)
 
         times_dataset = file.create_dataset("times", data=times)
 
-        pos_dataset.attrs["temperature"] = self.bodies.temperature
-        vel_dataset.attrs["temperature"] = self.bodies.temperature
+        pos_dataset.attrs["temperature"] = self.bodies.inputTemp
+        vel_dataset.attrs["temperature"] = self.bodies.inputTemp
 
         pos_dataset.attrs["density"] = self.box.density
         vel_dataset.attrs["density"] = self.box.density
 
         pos_dataset.attrs["box-edges"] = self.box.edges
         vel_dataset.attrs["box-edges"] = self.box.edges
-        E_kin_dataset.attrs["box-edges"] = self.box.edges
+        energy_dataset.attrs["box-edges"] = self.box.edges
 
         print (len(pos_dataset))
 
@@ -48,7 +48,7 @@ class Simulator:
 
     def equilibrate(self, iterations=15, iteration_time=10., threshold=1.e-2):
 
-        target_kinetic_energy = (self.bodies.dim/2) * (self.bodies.n_atoms - 1) * self.bodies.dimlessTemp
+        target_kinetic_energy = (self.bodies.dim/2) * (self.bodies.n_atoms - 1) * self.bodies.inputTemp
 
         # save the energy fractions for each iteration
         energy_fractions = []

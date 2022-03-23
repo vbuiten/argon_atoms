@@ -79,18 +79,19 @@ class Particles:
     def temperature(self):
         '''Calculate the actual temperature given the particles' velocities.'''
 
-        self._temperature = np.mean(self.velocities**2)
+        kinetic_energy = self.kineticEnergy()
+        self._temperature = (2 / self.dim) * (kinetic_energy / (self.n_atoms - 1))
 
         return self._temperature
 
     @temperature.setter
-    def temperature(self, dimlessTemp):
+    def temperature(self, inputTemp):
         '''Draws random particle velocities using the given real temperature in K.'''
 
-        self.dimlessTemp = dimlessTemp
-        self.velocities = np.sqrt(self.dimlessTemp)
+        self.inputTemp = inputTemp
+        self.velocities = np.sqrt(self.inputTemp)
 
-        self._temperature = dimlessTemp
+        self._temperature = inputTemp
 
 
     def kineticEnergy(self):

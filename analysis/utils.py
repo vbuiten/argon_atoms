@@ -52,10 +52,13 @@ class ParticlesFromHistory(Particles):
     def __init__(self, history, time_idx=-1):
 
         self.history = load_history(history)
+        self.time_idx = time_idx
 
         super().__init__(self.history.n_atoms, self.history.dim)
+
         self.positions = self.history.pos[time_idx]
-        self.velocities = self.history.pos[time_idx]
+        self.velocities = self.history.vel[time_idx]
+        self.inputTemp = self.history.temperature
 
         self.box = BoxBase(self.history.density, self.n_atoms, dim=self.dim)
 
@@ -73,7 +76,18 @@ class SimulationIterations:
             if f.endswith(".hdf5") or f.endswith(".hdf"):
                 history = load_history(datafolder+f)
                 self.histories.append(history)
-                self.final_particles.append(ParticlesFromHistory(history))
+
+                '''
+                particles = Particles(history.n_atoms, history.dim)
+                particles.positions = history.pos[-1]
+                particles.velocities = history.vel[-1]
+
+                '''
+                particles = ParticlesFromHistory(history)
+                self.final_particles.append(particles)
+
+
+                self.final_particles.append(particles)
 
         self.datafolder = datafolder
         self.box = self.final_particles[0].box
