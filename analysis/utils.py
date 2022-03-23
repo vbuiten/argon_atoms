@@ -66,11 +66,12 @@ class ParticlesFromHistory(Particles):
 class SimulationIterations:
     '''Class for loading a series of iterations of a simulation, all stored in datafolder.'''
 
-    def __init__(self, datafolder):
+    def __init__(self, datafolder, samebox=True):
 
         files_list = os.listdir(datafolder)
         self.histories = []
         self.final_particles = []
+        boxes = []
 
         for i, f in enumerate(files_list):
             if f.endswith(".hdf5") or f.endswith(".hdf"):
@@ -86,11 +87,15 @@ class SimulationIterations:
                 particles = ParticlesFromHistory(history)
                 self.final_particles.append(particles)
 
-
-                self.final_particles.append(particles)
+                boxes.append(particles.box)
 
         self.datafolder = datafolder
-        self.box = self.final_particles[0].box
+
+        if samebox:
+            self.box = boxes[0]
+
+        else:
+            self.box = boxes
 
 
 class PlotPreferences:
@@ -124,8 +129,9 @@ class RepeatedSimsBase:
         self.n_atoms = self.particles[0].n_atoms
         self.dim = self.particles[0].dim
 
-        if isinstance(self.box_lengths, np.ndarray) and len(self.box_lengths.shape) == 1:
-            self.volume = self.box_lengths[0] ** self.dim
+        if isinstance(self.box_lengths, np.ndarray):
+            if len(self.box_lengths.shape) == 1:
+                self.volume = self.box_lengths[0] ** self.dim
 
         elif isinstance(self.box_lengths, float):
             self.volume = self.box_lengths ** self.dim
@@ -137,16 +143,30 @@ class RepeatedSimsBase:
         self.density = self.n_atoms / self.volume
 
 
-class VaryingInitialConditionsSims(RepeatedSimsBase):
+class VaryingInitialConditionsSims:
 
-    def __init__(self, particles, box_lengths):
-        super().__init__(particles, box_lengths)
+    def __init__(self, particles, boxes):
+
+        if isinstance(particles, list):
+            self.particles = particles
+        else:
+            self.particles = [particles]
+
+        self.n_iterations = len(self.particles)
+        self.dim = self.particles[0].dim
 
         self.n_atoms = np.zeros(len(particles))
         self.temperature = np.zeros(len(particles))
         self.density = np.zeros(len(particles))
 
+        box_lengths = []
+        for i, el in enumerate(boxes):
+            box_lengths.append(el.lengths)
+
+        self.box_lengths = np.array(box_lengths)
+        self.volume = self.box_lengths[:,0] ** self.dim
+
         for i, set in enumerate(particles):
             self.n_atoms[i] = set.n_atoms
             self.temperature[i] = set.temperature
-            self.density[i] = set.n_atoms / self.volume
+            self.density[i] = set.n_atoms / self.volume[i]

@@ -16,7 +16,10 @@ def pressureFromParticles(particles, box_lengths, density, temperature):
 
         for idx, position in enumerate(set.positions):
 
-            pos_others = minimumImagePositions(position, set.positions[idx + 1:], box_lengths)
+            try:
+                pos_others = minimumImagePositions(position, set.positions[idx+1:], box_lengths)
+            except:
+                pos_others = minimumImagePositions(position, set.positions[idx+1:], box_lengths[i])
 
             distances2 = np.zeros(len(pos_others))
             for j in range(len(pos_others)):
@@ -27,7 +30,7 @@ def pressureFromParticles(particles, box_lengths, density, temperature):
         potential_terms[i] = np.sum(terms_particles)
 
     prefactor1 = temperature * density
-    prefactor2 = 4. / (particles.n_atoms * temperature)
+    prefactor2 = 4. / (particles[0].n_atoms * temperature)
 
     pressure = prefactor1 * (1 - prefactor2 * potential_terms)
 
@@ -101,10 +104,10 @@ class VirialPressure(RepeatedSimsBase):
 
 class PhaseDiagram(VaryingInitialConditionsSims):
 
-    def __init__(self, particles, box_lengths, plotprefs=None):
-        super().__init__(particles, box_lengths)
+    def __init__(self, particles, boxes, plotprefs=None):
+        super().__init__(particles, boxes)
 
-        self.pressures = pressureFromParticles(particles, box_lengths, self.density, self.temperature)
+        self.pressures = pressureFromParticles(particles, self.box_lengths, self.density, self.temperature)
 
         if plotprefs is None:
             self.plotprefs = PlotPreferences(markersize=3, marker="s")
@@ -117,7 +120,7 @@ class PhaseDiagram(VaryingInitialConditionsSims):
 
     def plot(self):
 
-        sc = self.ax.plot(self.temperature, self.pressures, c=self.density, ls="", markersize=self.plotprefs.markersize,
+        sc = self.ax.scatter(self.temperature, self.pressures, c=self.density, s=self.plotprefs.markersize,
                           marker=self.plotprefs.marker)
         self.ax.set_xlabel("Temperature")
         self.ax.set_ylabel("Pressure")
