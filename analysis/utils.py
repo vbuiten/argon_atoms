@@ -135,3 +135,18 @@ class RepeatedSimsBase:
 
         self.temperature = self.particles[0].temperature
         self.density = self.n_atoms / self.volume
+
+
+class VaryingInitialConditionsSims(RepeatedSimsBase):
+
+    def __init__(self, particles, box_lengths):
+        super().__init__(particles, box_lengths)
+
+        self.n_atoms = np.zeros(len(particles))
+        self.temperature = np.zeros(len(particles))
+        self.density = np.zeros(len(particles))
+
+        for i, set in enumerate(particles):
+            self.n_atoms[i] = set.n_atoms
+            self.temperature[i] = set.temperature
+            self.density[i] = set.n_atoms / self.volume

@@ -3,13 +3,42 @@
 import numpy as np
 from simulation.utils import distanceSquaredFromPosition, minimumImagePositions
 from framework.particles import Particles
-from analysis.utils import RepeatedSimsBase, PlotPreferences
+from analysis.utils import RepeatedSimsBase, PlotPreferences, VaryingInitialConditionsSims
 import matplotlib.pyplot as plt
+
+def pressureFromParticles(particles, box_lengths, density, temperature):
+
+    potential_terms = np.zeros(len(particles))
+
+    for i, set in enumerate(particles):
+
+        terms_particles = np.zeros(len(set.positions))
+
+        for idx, position in enumerate(set.positions):
+
+            pos_others = minimumImagePositions(position, set.positions[idx + 1:], box_lengths)
+
+            distances2 = np.zeros(len(pos_others))
+            for j in range(len(pos_others)):
+                distances2[j] = distanceSquaredFromPosition(position, pos_others[j])
+
+            terms_particles[idx] = np.sum(distances2 ** (-3) - 2 * distances2 ** (-6))
+
+        potential_terms[i] = np.sum(terms_particles)
+
+    prefactor1 = temperature * density
+    prefactor2 = 4. / (particles.n_atoms * temperature)
+
+    pressure = prefactor1 * (1 - prefactor2 * potential_terms)
+
+    return pressure
+
 
 class VirialPressure(RepeatedSimsBase):
     def __init__(self, particles, box_lengths, plotprefs=None):
         super().__init__(particles, box_lengths)
 
+        '''
         potential_terms = np.zeros(len(particles))
 
         for i, set in enumerate(particles):
@@ -32,6 +61,9 @@ class VirialPressure(RepeatedSimsBase):
         prefactor2 = 4. / (self.n_atoms * self.temperature)
 
         self.pressures = prefactor1 * (1 - prefactor2 * potential_terms)
+        '''
+
+        self.pressures = pressureFromParticles(particles, box_lengths, self.density, self.temperature)
 
         self.pressure_avg = np.mean(self.pressures)
         self.pressure_68p = np.percentile(self.pressures, [16.,84.])
@@ -65,3 +97,33 @@ class VirialPressure(RepeatedSimsBase):
     def save(self, savefile):
 
         self.fig.savefig(savefile, bbox_inches="tight")
+
+
+class PhaseDiagram(VaryingInitialConditionsSims):
+
+    def __init__(self, particles, box_lengths, plotprefs=None):
+        super().__init__(particles, box_lengths)
+
+        self.pressures = pressureFromParticles(particles, box_lengths, self.density, self.temperature)
+
+        if plotprefs is None:
+            self.plotprefs = PlotPreferences(markersize=3, marker="s")
+        else:
+            self.plotprefs = plotprefs
+
+        self.fig, self.ax = plt.subplots(figsize=self.plotprefs.figsize, dpi=self.plotprefs.dpi)
+        self.fig.suptitle("Phase Diagram")
+
+
+    def plot(self):
+
+        sc = self.ax.plot(self.temperature, self.pressures, c=self.density, ls="", markersize=self.plotprefs.markersize,
+                          marker=self.plotprefs.marker)
+        self.ax.set_xlabel("Temperature")
+        self.ax.set_ylabel("Pressure")
+        cbar = self.fig.colorbar(sc, label="Density")
+
+
+    def show(self):
+
+        self.fig.show()
