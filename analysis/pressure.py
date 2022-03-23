@@ -127,3 +127,7 @@ class PhaseDiagram(VaryingInitialConditionsSims):
     def show(self):
 
         self.fig.show()
+
+    def save(self, savefile):
+
+        self.fig.savefig(savefile, bbox_inches="tight")
