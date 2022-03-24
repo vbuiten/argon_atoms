@@ -1,26 +1,20 @@
 import numpy as np
-from scipy.stats import multivariate_normal
-import h5py
-from simulation.utils import LennardJonesPotential, UnitScaler
+from simulation.utils import LennardJonesPotential, minimumImagePositions, distanceSquaredFromPosition
 
 class Particles:
-    '''Class for handling a set of n_atoms particles.'''
-    def __init__(self, n_atoms, dim, mass=1., unitscaler=None):
+    '''
+    Class for handling a set of n_atoms particles.
+
+    Parameters:
+        n_atoms : int
+            Number of particles
+        dim : int
+            Dimensions of the system
+    '''
+
+    def __init__(self, n_atoms, dim):
         self.n_atoms = n_atoms
         self.dim = dim
-        self.mass = mass
-
-        '''
-        if unitscaler is None:
-            self.unitscaler = UnitScaler()
-        elif isinstance(unitscaler, UnitScaler):
-            self.unitscaler = unitscaler
-        else:
-            raise TypeError("Invalid unitscaler given.")
-            
-        '''
-
-        self.savefile = None
 
     def __len__(self):
         return self.n_atoms
@@ -31,15 +25,17 @@ class Particles:
 
     @positions.setter
     def positions(self, pos):
+        '''
+
+        :param pos: ndarray of shape (self.n_atoms, self.dim) OR (self.dim, 2)
+                    In the first case, taken as the positions of particles.
+                    In the second case, taken as the edges of the box in which the particles live.
+        '''
+
         if pos.shape == (self.n_atoms, self.dim):
             self._positions = pos
 
         elif pos.shape == (self.dim, 2):
-            # generate random positions from a uniform distribution
-            # pos can be passed as an array containing the edges of the box
-
-            #position = np.random.uniform(low=pos[:,0], high=pos[:,1], size=(self.n_atoms, self.dim))
-            #self._positions = position
 
             lengths = pos[:,1] - pos[:,0]
             n_units = int((self.n_atoms / (self.dim + 1))**(1/self.dim))
@@ -60,6 +56,13 @@ class Particles:
 
     @velocities.setter
     def velocities(self, vel):
+        '''
+
+        :param vel: ndarray of shape (self.n_atoms, self.dim) OR float
+                    In the first case, takes input as velocities of particles.
+                    In the second case, draws random velocities from a gaussian with given standard deviation.
+        '''
+
         if isinstance(vel, np.ndarray):
             if vel.shape == (self.n_atoms, self.dim):
                 self._velocities = vel
@@ -80,18 +83,19 @@ class Particles:
     def temperature(self):
         '''Calculate the actual temperature given the particles' velocities.'''
 
-        self._temperature = np.mean(self.velocities**2)
+        kinetic_energy = self.kineticEnergy()
+        self._temperature = (2 / self.dim) * (kinetic_energy / (self.n_atoms - 1))
 
         return self._temperature
 
     @temperature.setter
-    def temperature(self, dimlessTemp):
-        '''Draws random particle velocities using the given real temperature in K.'''
+    def temperature(self, inputTemp):
+        '''Draws random particle velocities using the given dimensionless temperature.'''
 
-        self.dimlessTemp = dimlessTemp
-        self.velocities = np.sqrt(self.dimlessTemp)
+        self.inputTemp = inputTemp
+        self.velocities = np.sqrt(self.inputTemp)
 
-        self._temperature = dimlessTemp
+        self._temperature = inputTemp
 
 
     def kineticEnergy(self):
@@ -103,6 +107,11 @@ class Particles:
 
 
     def potentialEnergy(self, box_length):
+        '''
+        Computes the potential energy of the system.
+        :param box_length: float or ndarray of shape (self.dim,)
+                    Indicates the linear size of the box
+        '''
 
         potential = np.zeros(self.n_atoms)
 
@@ -111,34 +120,47 @@ class Particles:
             # make sure not to count pairs twice
             pos_others = self.positions[i+1:]
 
-            # use the minimum image convention
-            pos_diff = pos_others - pos
-            pos_others = pos_others - box_length * np.rint(pos_diff/box_length)
+            pos_others = minimumImagePositions(pos, pos_others, box_length)
+
             potential[i] = LennardJonesPotential(pos, pos_others)
 
         potential_energy = np.sum(potential)
 
         return potential_energy
 
-    def createFile(self, savefile):
-        self.savefile = savefile
-        file = h5py.File(savefile, "w")
-        file.create_group("positions")
-        file.create_group("velocities")
-        #datasets = file.create_dataset("particles", )
-        file.close()
 
-    def saveToFile(self, savefile=None):
+    def pairDistances(self, box_length):
+        '''Computes the distances between all pairs of particles in the simulation.
 
-        if self.savefile is None:
-            self.createFile(savefile)
+        :param box_length: float or ndarray of shape (self.dim,)
 
-        file = h5py.File(self.savefile, "r+")
-        dataset = file["/particles"]
-        dataset["positions"].append(self.positions)
+        '''
+
+        distances2 = np.zeros((self.n_atoms, self.n_atoms-1))
+
+        for i in range(self.n_atoms):
+
+            pos = self.positions[i]
+            pos_others = np.concatenate([self.positions[:i], self.positions[i+1:]])
+            nearest_positions = minimumImagePositions(pos, pos_others, box_length)
+
+            for j, other_pos in enumerate(nearest_positions):
+                distances2[i,j] = distanceSquaredFromPosition(pos, other_pos)
+
+        distances = np.sqrt(distances2)
+
+        return distances
 
 
 def initialiseLattice(unitlength, dim=3, units=3):
+    '''
+    Initialises particle positions on an FCC lattice.
+
+    :param unitlength: linear size of an FCC base unit
+    :param dim: dimensions of the system (2 or 3)
+    :param units: number of unit cells to generate
+    :return: positions on the lattice
+    '''
 
     positions = []
 

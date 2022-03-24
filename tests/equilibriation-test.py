@@ -5,12 +5,12 @@ from framework.particles import Particles
 from simulation.sim import Simulator
 from simulation.utils import minimumImageForces
 from analysis.visualisation import TrajectoryPlotter
-from analysis.energies import EnergyPlotter
+from analysis.energies import EnergyPlotter, EquilibrationPlotter
 import numpy as np
 import matplotlib.pyplot as plt
 
-#savepath = "C:\\Users\\victo\\Documents\\Uni\\COP\\"
-savepath = "/net/vdesk/data2/buiten/COP/"
+savepath = "C:\\Users\\victo\\Documents\\Uni\\COP\\"
+#savepath = "/net/vdesk/data2/buiten/COP/"
 
 n_atoms = 108
 
@@ -25,15 +25,13 @@ forces = minimumImageForces(atoms.positions, box.lengths)
 
 #print ("Initial velocities:", atoms.velocities)
 workerVerlet = Simulator(atoms, box, timestep=0.001, minimage=True, method="Verlet")
-Efracs = workerVerlet.equilibriate(iterations=10, threshold=0.1, iteration_time=10)
-workerVerlet.evolve(20, timestep_external=0.01, savefile=savepath+"verlet-test.hdf")
+Efracs = workerVerlet.equilibrate(iterations=20, threshold=0.01, iteration_time=10)
+workerVerlet.evolve(200, timestep_external=0.1, savefile=savepath+"verlet-test.hdf")
 #print ("Velocities after integrating:", atoms.velocities)
 
-fig, ax = plt.subplots()
-ax.plot([i for i in range(len(Efracs))], Efracs)
-ax.set_xlabel("Iteration")
-ax.set_ylabel(r"$\frac{E_{target}}{E_{kin}}$")
-fig.show()
+equilibration_plotter = EquilibrationPlotter(Efracs)
+equilibration_plotter.plot()
+equilibration_plotter.show()
 
 plotterVerlet = TrajectoryPlotter(savepath+"verlet-test.hdf")
 #plotterVerlet.plot(-10,len(plotterVerlet.history.times)+1)

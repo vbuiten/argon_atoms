@@ -1,8 +1,22 @@
 import numpy as np
 
 class BoxBase:
-    '''Class setting up the square/cubic box in which the particles live.
-    Each side of the box spans from 0 to length.'''
+    '''
+
+    Class setting up the square/cubic box in which the particles live.
+    Each side of the box spans from 0 to length.
+
+    Parameters:
+        dimlessDensity : float
+            Desired dimensionless density of particles in the box.
+
+        n_atoms : int
+            Desired number of atoms living in the box.
+
+        dim : int
+            Dimensions of the box. Default is 3; 2 can be used for tests but will not provide accurate science results.
+
+    '''
 
     def __init__(self, dimlessDensity, n_atoms, dim=3):
 

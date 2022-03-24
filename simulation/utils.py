@@ -4,11 +4,11 @@ import numpy as np
 from numba import jit
 
 @jit(nopython=True, parallel=False)
-def distanceFromPosition(pos1, pos2):
+def distanceSquaredFromPosition(pos1, pos2):
     '''Calculates the distance between 1D arrays pos1 and pos2.'''
 
     diffVector = pos2 - pos1
-    dist = np.sqrt(np.dot(diffVector, diffVector))
+    dist = np.dot(diffVector, diffVector)
 
     return dist
 
@@ -19,6 +19,16 @@ def posInBox(pos, lengths):
     pos = (pos + 2*lengths) % lengths
     return pos
 
+
+@jit(nopython=True)
+def minimumImagePositions(position, pos_others, lengths):
+
+    pos_diff = position - pos_others
+    nearest_positions = pos_others + lengths * np.rint(pos_diff/lengths)
+
+    return nearest_positions
+
+
 @jit(nopython=True, parallel=False)
 def minimumImageForces(positions, lengths):
 
@@ -28,10 +38,14 @@ def minimumImageForces(positions, lengths):
         pos = positions[i]
         pos_others = np.concatenate((positions[:i], positions[i+1:]))
 
+        nearest_positions = minimumImagePositions(pos, pos_others, lengths)
+
+        '''
         pos_diff = pos - pos_others
         nearest_positions = pos_others + lengths * np.rint(pos_diff/lengths)
         #pos_diff = pos_others - pos
         #nearest_positions = pos_others - lengths * np.rint(pos_diff/lengths)
+        '''
         forces[i] = LennardJonesForce(pos, nearest_positions)
 
     return forces
@@ -52,17 +66,15 @@ def LennardJonesForce(pos1, pos_others, soft_eps=1e-10):
     totalForce (ndarray): Cartesian components of the force acting on the particle
     '''
 
-    distances = np.zeros(len(pos_others))
+    distances2 = np.zeros(len(pos_others))
 
     for i in range(len(pos_others)):
-        distances[i] = distanceFromPosition(pos1, pos_others[i])
-    if np.sum(distances < 0) > 0:
-        print ("Negative distances detected.")
+        distances2[i] = distanceSquaredFromPosition(pos1, pos_others[i])
 
     # array calculations for speed
     # these are all 1D arrays of length n_other_particles
-    termPauli = -6 / (distances**6 + soft_eps)
-    termWaals = 12 / (distances**12 + soft_eps)
+    termPauli = -6 / (distances2**3 + soft_eps)
+    termWaals = 12 / (distances2**6 + soft_eps)
 
     # now compute the relative position vector x_i - x_j for each particle j
     # shape is (n_other_particles, dim)
@@ -72,7 +84,7 @@ def LennardJonesForce(pos1, pos_others, soft_eps=1e-10):
     # numpy can't automatically broadcast 2D and 1D --> loop over dimensions
     forceTerms = np.zeros(relativePositions.shape)
     for dim in range(relativePositions.shape[-1]):
-        forceTerms[:,dim] = relativePositions[:,dim]/(distances**2 + soft_eps) * (termPauli + termWaals)
+        forceTerms[:,dim] = relativePositions[:,dim]/(distances2 + soft_eps) * (termPauli + termWaals)
 
     totalForce = 4 * np.sum(forceTerms, axis=0)
 
@@ -81,13 +93,13 @@ def LennardJonesForce(pos1, pos_others, soft_eps=1e-10):
 @jit(nopython=True, parallel=False)
 def LennardJonesPotential(pos1, pos_others, soft_eps=1e-10):
 
-    distances = np.zeros(len(pos_others))
+    distances2 = np.zeros(len(pos_others))
 
     for i in range(len(pos_others)):
-        distances[i] = distanceFromPosition(pos1, pos_others[i])
+        distances2[i] = distanceSquaredFromPosition(pos1, pos_others[i])
 
-    termPauli = -1./(distances**6 + soft_eps)
-    termWaals = 1./(distances**12 + soft_eps)
+    termPauli = -1./(distances2**3 + soft_eps)
+    termWaals = 1./(distances2**6 + soft_eps)
 
     potential_terms = termWaals + termPauli
     potential = 4 * np.sum(potential_terms)
@@ -144,7 +156,7 @@ class UnitScaler:
         return self.k_boltzmann * kelvin / self.energy_scale
 
     def toKelvinFromDimlessTemperature(self, dimless_temperature):
-        return (self.energy_scale * self.k_boltzmann) * dimless_temperature
+        return (self.energy_scale / self.k_boltzmann) * dimless_temperature
 
     def toKelvinFromDimlessEnergy(self, dimless_energy):
         return self.toJoule(dimless_energy) / self.k_boltzmann
@@ -163,3 +175,9 @@ class UnitScaler:
 
     def toDimlessDensity(self, kg_per_m3):
         return (self.length_scale**3 / self.mass_scale) * kg_per_m3
+
+    def toJoulePerCubicMeter(self, dimless_pressure):
+        return (self.energy_scale / self.length_scale**3) * dimless_pressure
+
+    def toDimlessPressure(self, joule_per_m3):
+        return (self.length_scale**3 / self.energy_scale) * joule_per_m3

@@ -3,9 +3,20 @@
 import numpy as np
 from simulation.utils import LennardJonesForce, posInBox, minimumImageForces
 import h5py
+from numba import jit
 
 class Simulator:
-    def __init__(self, bodies, box, timestep=0.1, method="Verlet", minimage=True):
+    '''
+    Class for equilibrating and running the simulation, and saving the results.
+
+    :param: bodies: framework.particles.Particles instance
+    :param box: framework.box.BoxBase instance
+    :param timestep=0.001: dimensionless time step to use.
+    :param method="Verlet": integration method to use
+    :param minimage=True: whether to use the minimum image convention
+    '''
+
+    def __init__(self, bodies, box, timestep=0.001, method="Verlet", minimage=True):
 
         # check if box and bodies have the same dimensions
         if box.dim != bodies.dim:
@@ -19,75 +30,30 @@ class Simulator:
         self.minimage = minimage
 
 
-    def evolutionStep(self, step_idx, current_pos=None, old_pos=None):
-
-        if self.minimage:
-            # first compute the force acting on each particle
-            forces = minimumImageForces(self.bodies.positions, self.box.lengths)
-
-        else:
-            # compute forces without minimum image convention
-            forces = np.zeros(self.bodies.positions.shape)
-            for i in range(len(forces)):
-                pos = self.bodies.positions[i]
-                pos_others = np.concatenate((self.bodies.positions[:i], self.bodies.positions[i + 1:]))
-                forces[i] = LennardJonesForce(pos, pos_others)
-
-        # update positions and velocities
-        # use the user-specified algorithm
-        if self.method == "Euler":
-            newpos = self.bodies.positions + self.timestep * self.bodies.velocities
-            newpos = posInBox(newpos, self.box.lengths)
-
-            newvel = self.bodies.velocities + self.timestep * forces
-
-        elif self.method == "Verlet":
-
-            if step_idx == 0:
-                # compute the "previous set" of positions (backward Euler)
-                # these have to ignore the "stay in box" condition!
-                old_pos = self.bodies.positions - self.timestep * self.bodies.velocities
-                # old_pos = self.bodies.positions + pos_subtract
-                current_pos = np.copy(self.bodies.positions)
-
-            newpos = 2 * current_pos - old_pos + self.timestep ** 2 * forces
-
-            # compute velocity before shifting positions to stay inside the box
-            newvel = (newpos - old_pos) / (2 * self.timestep)
-
-            # save the current positions as "old positions" for the next iteration
-            old_pos = np.copy(current_pos)
-            current_pos = np.copy(newpos)
-
-            newpos = posInBox(newpos, self.box.lengths)
-
-        else:
-            raise ValueError("Invalid integration method given. Use 'Euler' or 'Verlet'.")
-
-        self.bodies.positions = newpos
-        self.bodies.velocities = newvel
-
-        return current_pos, old_pos
-
-
     def saveToFile(self, savefile, times):
+        '''
+        Save the simulation data to a file.
+
+        :param savefile: filename to save data to
+        :param times: time stamps to save
+        '''
 
         file = h5py.File(savefile, "w")
         pos_dataset = file.create_dataset("position-history", data=self.pos_history)
         vel_dataset = file.create_dataset("velocity-history", data=self.vel_history)
-        E_kin_dataset = file.create_dataset("energy-history", data=self.energy_history)
+        energy_dataset = file.create_dataset("energy-history", data=self.energy_history)
 
         times_dataset = file.create_dataset("times", data=times)
 
-        pos_dataset.attrs["temperature"] = self.bodies.temperature
-        vel_dataset.attrs["temperature"] = self.bodies.temperature
+        pos_dataset.attrs["temperature"] = self.bodies.inputTemp
+        vel_dataset.attrs["temperature"] = self.bodies.inputTemp
 
         pos_dataset.attrs["density"] = self.box.density
         vel_dataset.attrs["density"] = self.box.density
 
         pos_dataset.attrs["box-edges"] = self.box.edges
         vel_dataset.attrs["box-edges"] = self.box.edges
-        E_kin_dataset.attrs["box-edges"] = self.box.edges
+        energy_dataset.attrs["box-edges"] = self.box.edges
 
         print (len(pos_dataset))
 
@@ -96,16 +62,20 @@ class Simulator:
         print ("File created.")
 
 
-    def equilibriate(self, iterations=5, iteration_time=100., threshold=1.e-2):
+    def equilibrate(self, iterations=15, iteration_time=10., threshold=1.e-2):
+        '''
+        Equilibrate the system.
 
-        target_kinetic_energy = (self.bodies.dim/2) * (self.bodies.n_atoms - 1) * self.bodies.dimlessTemp
+        :param iterations: maximum number of iterations
+        :param iteration_time: dimensionless time for one equilibration step
+        :param threshold: maximum deviation from the desired kinetic energy; sets the stopping condition
+        '''
+
+        target_kinetic_energy = (self.bodies.dim/2) * (self.bodies.n_atoms - 1) * self.bodies.inputTemp
 
         # save the energy fractions for each iteration
         energy_fractions = []
 
-        fractional_deviation = np.inf
-
-        #while np.abs(fractional_deviation) > threshold:
         for i in range(iterations):
 
             # run the simulation for a time iteration_time
@@ -119,7 +89,6 @@ class Simulator:
 
             energy_fractions.append(energy_fraction)
             print("target E_kin / real E_kin =", energy_fraction)
-            #print("target E_kin / real E_kin - 1 =", fractional_deviation)
 
             if np.abs(fractional_deviation) > threshold:
 
@@ -143,7 +112,13 @@ class Simulator:
 
 
     def evolve(self, t_end, savefile=None, timestep_external=1.):
-        '''TO DO: fix backwards Euler for periodic boundary conidtions'''
+        '''
+        Evolves the system.
+
+        :param t_end: time to run the system (dimensionless units)
+        :param savefile: file to save data to. If None, saves no data.
+        :param timestep_external: time step to use for saving data.
+        '''
 
         times = np.arange(self.time, self.time+t_end, self.timestep)
 

@@ -1,5 +1,6 @@
 from analysis.utils import load_history, PlotPreferences
 import matplotlib.pyplot as plt
+import numpy as np
 from simulation.utils import UnitScaler
 
 class EnergyPlotter:
@@ -43,7 +44,7 @@ class EnergyPlotter:
             self.ax.set_xlabel("Time (s)")
             self.ax.set_ylabel("Energy (J)")
 
-        self.ax.set_yscale("log")
+        self.ax.set_yscale("linear")
 
 
     def plotKinetic(self, alpha=0.7):
@@ -70,4 +71,31 @@ class EnergyPlotter:
     def show(self):
 
         self.ax.legend()
+        self.fig.show()
+
+
+class EquilibrationPlotter:
+    def __init__(self, energy_fractions, plotprefs=None):
+
+        self.energy_fractions = np.array(energy_fractions)
+        self.iterations = np.array([i+1 for i in range(len(energy_fractions))])
+
+        if plotprefs is None:
+            self.plotprefs = PlotPreferences(markersize=5)
+
+        else:
+            self.plotprefs = plotprefs
+
+        self.fig, self.ax = plt.subplots(figsize=self.plotprefs.figsize, dpi=self.plotprefs.dpi)
+        self.ax.set_xlabel(r"Iteration")
+        self.ax.set_ylabel(r"$\frac{E_{kin,target}}{E_{kin,actual}}$")
+
+
+    def plot(self):
+
+        self.ax.plot(self.iterations, self.energy_fractions, markersize=self.plotprefs.markersize)
+
+
+    def show(self):
+
         self.fig.show()
