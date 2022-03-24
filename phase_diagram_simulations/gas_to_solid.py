@@ -14,8 +14,19 @@ n_atoms = 108
 sqrt_iterations = 7
 iterations = sqrt_iterations**2
 
+'''
 temperature = np.linspace(0.3, 3.0, sqrt_iterations)
 density = np.linspace(0.3, 1.2, sqrt_iterations)
+
+temperature = np.array([0.1, 3.5])
+density = np.array([0.1, 1.5])
+
+temperature = np.array([1.0, 2.0])
+density = np.array([0.5, 1.0])
+'''
+
+temperature = np.array([1.5, 1.8, 2.3])
+density = np.array([0.4, 0.5])
 
 foldername = "/49points-gas-to-solid/"
 folderpath = folderPath(foldername)
@@ -39,7 +50,17 @@ for i in range(len(temperature)):
 sim_runs = SimulationIterations(folderpath, samebox=False)
 phase_diagram = PhaseDiagram(sim_runs.final_particles, sim_runs.box,
                              plotprefs=plotprefs)
-#phase_diagram.plot()
+
+'''
 phase_diagram.contours()
-phase_diagram.save(folderpath+"phase-diagram.png")
+phase_diagram.show()
+
+phase_diagram.plotPressureColors()
+phase_diagram.save(folderpath+"phase-diagram-points.png")
+#phase_diagram.contours()
+'''
+
+phase_diagram.contoursPressure(levels=20, maxpressure=50)
+phase_diagram.save(folderpath+"phase-diagram-contours-pressure.png")
+
 phase_diagram.show()

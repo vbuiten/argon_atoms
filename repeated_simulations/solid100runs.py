@@ -11,13 +11,13 @@ from data.utils import folderPath
 plotprefs = PlotPreferences(usetex=True)
 
 n_atoms = 108
-iterations = 100
+iterations = 50
 temperature = 0.5
 density = 1.2
 
 box = BoxBase(density, n_atoms, 3)
 
-foldername = "/dens"+str(density)+"-temp"+str(temperature)+"/"
+foldername = "/dens"+str(density)+"-temp"+str(temperature)+"-50runs/"
 folderpath = folderPath(foldername)
 
 '''
