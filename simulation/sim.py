@@ -6,7 +6,17 @@ import h5py
 from numba import jit
 
 class Simulator:
-    def __init__(self, bodies, box, timestep=0.1, method="Verlet", minimage=True):
+    '''
+    Class for equilibrating and running the simulation, and saving the results.
+
+    :param: bodies: framework.particles.Particles instance
+    :param box: framework.box.BoxBase instance
+    :param timestep=0.001: dimensionless time step to use.
+    :param method="Verlet": integration method to use
+    :param minimage=True: whether to use the minimum image convention
+    '''
+
+    def __init__(self, bodies, box, timestep=0.001, method="Verlet", minimage=True):
 
         # check if box and bodies have the same dimensions
         if box.dim != bodies.dim:
@@ -21,6 +31,12 @@ class Simulator:
 
 
     def saveToFile(self, savefile, times):
+        '''
+        Save the simulation data to a file.
+
+        :param savefile: filename to save data to
+        :param times: time stamps to save
+        '''
 
         file = h5py.File(savefile, "w")
         pos_dataset = file.create_dataset("position-history", data=self.pos_history)
@@ -47,15 +63,19 @@ class Simulator:
 
 
     def equilibrate(self, iterations=15, iteration_time=10., threshold=1.e-2):
+        '''
+        Equilibrate the system.
+
+        :param iterations: maximum number of iterations
+        :param iteration_time: dimensionless time for one equilibration step
+        :param threshold: maximum deviation from the desired kinetic energy; sets the stopping condition
+        '''
 
         target_kinetic_energy = (self.bodies.dim/2) * (self.bodies.n_atoms - 1) * self.bodies.inputTemp
 
         # save the energy fractions for each iteration
         energy_fractions = []
 
-        fractional_deviation = np.inf
-
-        #while np.abs(fractional_deviation) > threshold:
         for i in range(iterations):
 
             # run the simulation for a time iteration_time
@@ -69,7 +89,6 @@ class Simulator:
 
             energy_fractions.append(energy_fraction)
             print("target E_kin / real E_kin =", energy_fraction)
-            #print("target E_kin / real E_kin - 1 =", fractional_deviation)
 
             if np.abs(fractional_deviation) > threshold:
 
@@ -93,6 +112,13 @@ class Simulator:
 
 
     def evolve(self, t_end, savefile=None, timestep_external=1.):
+        '''
+        Evolves the system.
+
+        :param t_end: time to run the system (dimensionless units)
+        :param savefile: file to save data to. If None, saves no data.
+        :param timestep_external: time step to use for saving data.
+        '''
 
         times = np.arange(self.time, self.time+t_end, self.timestep)
 
