@@ -11,7 +11,7 @@ from data.utils import folderPath
 plotprefs = PlotPreferences(usetex=True)
 
 n_atoms = 108
-iterations = 100
+iterations = 50
 temperature = 3.0
 density = 0.3
 
@@ -20,7 +20,6 @@ box = BoxBase(density, n_atoms, 3)
 foldername = "/dens"+str(density)+"-temp"+str(temperature)+"/"
 folderpath = folderPath(foldername)
 
-'''
 for i in range(iterations):
     atoms = Particles(n_atoms,3)
     atoms.positions = box.edges
@@ -31,7 +30,6 @@ for i in range(iterations):
     sim.evolve(100, timestep_external=1., savefile=folderpath+"iteration"+str(i+1)+".hdf5")
 
     print ("Iteration "+str(i+1)+" finished.")
-'''
 
 sim_runs = SimulationIterations(folderpath)
 
