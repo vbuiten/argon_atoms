@@ -8,7 +8,7 @@ def distanceSquaredFromPosition(pos1, pos2):
     '''Calculates the distance between 1D arrays pos1 and pos2.'''
 
     diffVector = pos2 - pos1
-    dist = np.sqrt(np.dot(diffVector, diffVector))
+    dist = np.dot(diffVector, diffVector)
 
     return dist
 
@@ -156,7 +156,7 @@ class UnitScaler:
         return self.k_boltzmann * kelvin / self.energy_scale
 
     def toKelvinFromDimlessTemperature(self, dimless_temperature):
-        return (self.energy_scale * self.k_boltzmann) * dimless_temperature
+        return (self.energy_scale / self.k_boltzmann) * dimless_temperature
 
     def toKelvinFromDimlessEnergy(self, dimless_energy):
         return self.toJoule(dimless_energy) / self.k_boltzmann

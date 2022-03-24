@@ -20,6 +20,7 @@ box = BoxBase(density, n_atoms, 3)
 foldername = "/dens"+str(density)+"-temp"+str(temperature)+"/"
 folderpath = folderPath(foldername)
 
+'''
 for i in range(iterations):
     atoms = Particles(n_atoms,3)
     atoms.positions = box.edges
@@ -30,7 +31,7 @@ for i in range(iterations):
     sim.evolve(100, timestep_external=1., savefile=folderpath+"iteration"+str(i+1)+".hdf5")
 
     print ("Iteration "+str(i+1)+" finished.")
-
+'''
 
 sim_runs = SimulationIterations(folderpath)
 

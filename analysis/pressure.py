@@ -6,13 +6,15 @@ from framework.particles import Particles
 from analysis.utils import RepeatedSimsBase, PlotPreferences, VaryingInitialConditionsSims
 import matplotlib.pyplot as plt
 
-def pressureFromParticles(particles, box_lengths, density, temperature):
+def pressureFromParticles(particles_list, box_lengths, density, temperature):
 
-    potential_terms = np.zeros(len(particles))
+    potential_terms = np.zeros(len(particles_list))
+    temperatures = np.zeros(len(particles_list))
 
-    for i, set in enumerate(particles):
+    for i, set in enumerate(particles_list):
 
-        terms_particles = np.zeros(len(set.positions))
+        terms_set_i = np.zeros(len(set.positions))
+        temperatures[i] = set.temperature
 
         for idx, position in enumerate(set.positions):
 
@@ -25,21 +27,31 @@ def pressureFromParticles(particles, box_lengths, density, temperature):
             for j in range(len(pos_others)):
                 distances2[j] = distanceSquaredFromPosition(position, pos_others[j])
 
-            terms_particles[idx] = np.sum(distances2 ** (-3) - 2 * distances2 ** (-3))
+            terms_set_i[idx] = np.sum(distances2 ** (-3) - 2 * distances2 ** (-6))
 
-        potential_terms[i] = np.sum(terms_particles)
+        potential_terms[i] = np.sum(terms_set_i)
 
+    prefactor1 = temperatures * density
+    prefactor2 = 4. / (particles_list[0].n_atoms * temperatures)
+
+    '''
     prefactor1 = temperature * density
-    prefactor2 = 4. / (particles[0].n_atoms * temperature)
+    prefactor2 = 4. / (particles_list[0].n_atoms * temperature)
+    '''
+
+    print (prefactor1)
+    print (prefactor2)
+    print (potential_terms)
 
     pressure = prefactor1 * (1 - prefactor2 * potential_terms)
+    print (pressure)
 
     return pressure
 
 
 class VirialPressure(RepeatedSimsBase):
-    def __init__(self, particles, box_lengths, plotprefs=None):
-        super().__init__(particles, box_lengths)
+    def __init__(self, particles_list, box_lengths, plotprefs=None):
+        super().__init__(particles_list, box_lengths)
 
         '''
         potential_terms = np.zeros(len(particles))
@@ -66,7 +78,7 @@ class VirialPressure(RepeatedSimsBase):
         self.pressures = prefactor1 * (1 - prefactor2 * potential_terms)
         '''
 
-        self.pressures = pressureFromParticles(particles, box_lengths, self.density, self.temperature)
+        self.pressures = pressureFromParticles(self.particles, box_lengths, self.density, self.temperature)
 
         self.pressure_avg = np.mean(self.pressures)
         self.pressure_68p = np.percentile(self.pressures, [16.,84.])
@@ -125,6 +137,14 @@ class PhaseDiagram(VaryingInitialConditionsSims):
         self.ax.set_xlabel("Temperature")
         self.ax.set_ylabel("Pressure")
         cbar = self.fig.colorbar(sc, label="Density")
+
+
+    def contours(self):
+
+        cntr = self.ax.tricontourf(self.temperature, self.pressures, self.density)
+        self.ax.set_xlabel("Temperature")
+        self.ax.set_ylabel("Pressure")
+        cbar = self.fig.colorbar(cntr, label="Density")
 
 
     def show(self):

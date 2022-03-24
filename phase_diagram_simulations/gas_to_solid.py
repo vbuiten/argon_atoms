@@ -11,12 +11,13 @@ import numpy as np
 plotprefs = PlotPreferences(usetex=True)
 
 n_atoms = 108
-sqrt_iterations = 10
+sqrt_iterations = 7
 iterations = sqrt_iterations**2
+
 temperature = np.linspace(0.3, 3.0, sqrt_iterations)
 density = np.linspace(0.3, 1.2, sqrt_iterations)
 
-foldername = "/25points-gas-to-solid/"
+foldername = "/49points-gas-to-solid/"
 folderpath = folderPath(foldername)
 
 for i in range(len(temperature)):
@@ -38,6 +39,7 @@ for i in range(len(temperature)):
 sim_runs = SimulationIterations(folderpath, samebox=False)
 phase_diagram = PhaseDiagram(sim_runs.final_particles, sim_runs.box,
                              plotprefs=plotprefs)
-phase_diagram.plot()
+#phase_diagram.plot()
+phase_diagram.contours()
 phase_diagram.save(folderpath+"phase-diagram.png")
 phase_diagram.show()
