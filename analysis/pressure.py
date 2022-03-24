@@ -39,12 +39,7 @@ def pressureFromParticles(particles_list, box_lengths, density, temperature):
     prefactor2 = 4. / (particles_list[0].n_atoms * temperature)
     '''
 
-    print (prefactor1)
-    print (prefactor2)
-    print (potential_terms)
-
     pressure = prefactor1 * (1 - prefactor2 * potential_terms)
-    print (pressure)
 
     return pressure
 
@@ -53,35 +48,13 @@ class VirialPressure(RepeatedSimsBase):
     def __init__(self, particles_list, box_lengths, plotprefs=None):
         super().__init__(particles_list, box_lengths)
 
-        '''
-        potential_terms = np.zeros(len(particles))
-
-        for i, set in enumerate(particles):
-
-            terms_particles = np.zeros(len(set.positions))
-
-            for idx, position in enumerate(set.positions):
-
-                pos_others = minimumImagePositions(position, set.positions[idx+1:], box_lengths)
-
-                distances2 = np.zeros(len(pos_others))
-                for j in range(len(pos_others)):
-                    distances2[j] = distanceSquaredFromPosition(position, pos_others[j])
-
-                terms_particles[idx] = np.sum(distances2**(-3) - 2 * distances2**(-6))
-
-            potential_terms[i] = np.sum(terms_particles)
-
-        prefactor1 = self.temperature * self.density
-        prefactor2 = 4. / (self.n_atoms * self.temperature)
-
-        self.pressures = prefactor1 * (1 - prefactor2 * potential_terms)
-        '''
-
         self.pressures = pressureFromParticles(self.particles, box_lengths, self.density, self.temperature)
 
         self.pressure_avg = np.mean(self.pressures)
         self.pressure_68p = np.percentile(self.pressures, [16.,84.])
+
+        print ("Mean pressure:", self.pressure_avg)
+        print ("Pressure errors:", self.pressure_avg-self.pressure_68p)
 
         if plotprefs is None:
             self.plotprefs = PlotPreferences(markersize=3, marker="s")
@@ -139,6 +112,15 @@ class PhaseDiagram(VaryingInitialConditionsSims):
         cbar = self.fig.colorbar(sc, label="Density")
 
 
+    def plotPressureColors(self):
+
+        sc = self.ax.scatter(self.temperature, self.density, c=self.pressures, s=self.plotprefs.markersize,
+                             marker=self.plotprefs.marker, vmax=50)
+        self.ax.set_xlabel("Temperature")
+        self.ax.set_ylabel("Density")
+        cbar = self.fig.colorbar(sc, label="Pressure")
+
+
     def contours(self):
 
         cntr = self.ax.tricontourf(self.temperature, self.pressures, self.density)
@@ -146,6 +128,25 @@ class PhaseDiagram(VaryingInitialConditionsSims):
         self.ax.set_ylabel("Pressure")
         cbar = self.fig.colorbar(cntr, label="Density")
 
+
+    def contoursPressure(self, levels=15, minpressure=0.0001, maxpressure=1000):
+
+        goodpressure = (self.pressures < maxpressure) & (self.pressures > minpressure)
+        print ("Number of points used:", np.sum(goodpressure))
+
+        self.ax.tricontour(self.temperature[goodpressure], self.density[goodpressure],
+                           self.pressures[goodpressure], levels=levels, colors="white",
+                           linewidths=0.3)
+        cntr = self.ax.tricontourf(self.temperature[goodpressure], self.density[goodpressure],
+                                   self.pressures[goodpressure], levels=levels,
+                                   cmap="turbo")
+        sc = self.ax.scatter(self.temperature[goodpressure], self.density[goodpressure], c="k", s=self.plotprefs.markersize,
+                             marker=self.plotprefs.marker, vmax=50)
+
+        self.ax.set_xlabel("Temperature")
+        self.ax.set_ylabel("Density")
+        self.ax.set_title(str(np.sum(goodpressure))+" measurements with $P < $ "+str(maxpressure))
+        cbar = self.fig.colorbar(cntr, label="Pressure")
 
     def show(self):
 

@@ -17,11 +17,11 @@ density = 0.3
 
 box = BoxBase(density, n_atoms, 3)
 
-foldername = "/dens"+str(density)+"-temp"+str(temperature)+"/"
+foldername = "/dens"+str(density)+"-temp"+str(temperature)+"-50runs/"
 folderpath = folderPath(foldername)
 
 '''
-for i in range(iterations):
+for i in range(38,iterations):
     atoms = Particles(n_atoms,3)
     atoms.positions = box.edges
     atoms.temperature = temperature
