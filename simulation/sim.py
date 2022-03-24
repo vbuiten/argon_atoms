@@ -69,6 +69,8 @@ class Simulator:
         :param iterations: maximum number of iterations
         :param iteration_time: dimensionless time for one equilibration step
         :param threshold: maximum deviation from the desired kinetic energy; sets the stopping condition
+
+        :return energy_fractions: target kinetic energy / actual kinetic energy for all equilibration steps.
         '''
 
         target_kinetic_energy = (self.bodies.dim/2) * (self.bodies.n_atoms - 1) * self.bodies.inputTemp
