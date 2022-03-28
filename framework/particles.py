@@ -111,6 +111,8 @@ class Particles:
         Computes the potential energy of the system.
         :param box_length: float or ndarray of shape (self.dim,)
                     Indicates the linear size of the box
+        :return potential_energy: float
+                    The potential energy of the current system
         '''
 
         potential = np.zeros(self.n_atoms)
@@ -133,7 +135,9 @@ class Particles:
         '''Computes the distances between all pairs of particles in the simulation.
 
         :param box_length: float or ndarray of shape (self.dim,)
-
+                    The linear size of the box
+        :return distances: ndarray of shape (self.n_atoms, self.n_atoms-1)
+                    Distances between all particles
         '''
 
         distances2 = np.zeros((self.n_atoms, self.n_atoms-1))

@@ -6,7 +6,19 @@ from framework.particles import Particles
 from analysis.utils import RepeatedSimsBase, PlotPreferences, VaryingInitialConditionsSims
 import matplotlib.pyplot as plt
 
-def pressureFromParticles(particles_list, box_lengths, density, temperature):
+def pressureFromParticles(particles_list, box_lengths, density):
+    '''
+    Calculates the pressure for each system in particles_list.
+
+    :param particles_list: list of framework.particles.Particles instances or of analysis.utils.ParticlesFromHistory instances
+            List containing all particle systems to consider
+    :param box_lengths: float or ndarray of shape (n_sims, dim) or (n_sims,) or (dim,) if box length is the same for all systems
+    :param density: float or ndarray of shape (n_sims)
+            Density given to each system
+    :return: pressure: ndarray of shape (n_sims)
+            Calculated pressure for each system of particles given
+    '''
+
 
     potential_terms = np.zeros(len(particles_list))
     temperatures = np.zeros(len(particles_list))
@@ -34,17 +46,24 @@ def pressureFromParticles(particles_list, box_lengths, density, temperature):
     prefactor1 = temperatures * density
     prefactor2 = 4. / (particles_list[0].n_atoms * temperatures)
 
-    '''
-    prefactor1 = temperature * density
-    prefactor2 = 4. / (particles_list[0].n_atoms * temperature)
-    '''
-
     pressure = prefactor1 * (1 - prefactor2 * potential_terms)
 
     return pressure
 
 
 class VirialPressure(RepeatedSimsBase):
+    '''
+    Class for calculating and plotting the pressure for each system of particles provided.
+
+    :param particles_list: list of analysis.utils.ParticlesFromHistory instances
+            List of particle systems to analyse
+    :param box_lengths: ndarray of shape (n_sims, dim)
+            Linear sizes of the box used for each simulation
+    :param plotprefs: NoneType or analysis.utils.PlotPreferences instance
+            If an instance of PlotPreferences, the given preferences are used.
+            If None, the default layout is used.
+    '''
+
     def __init__(self, particles_list, box_lengths, plotprefs=None):
         super().__init__(particles_list, box_lengths)
 
@@ -90,9 +109,21 @@ class VirialPressure(RepeatedSimsBase):
 class PhaseDiagram(VaryingInitialConditionsSims):
 
     def __init__(self, particles, boxes, plotprefs=None):
+        '''
+        Class for plotting a phase diagram of all systems in particles.
+
+        :param particles: list of analysis.utils.ParticlesFromHistory instances
+                Particle systems to plot
+        :param boxes: list of framework.box.BoxBase instances
+                Boxes corresponding to each particle system.
+        :param plotprefs: analysis.utils.PlotPreferences instance or NoneType
+                If an instance of PlotPreferences, the given preferences are used.
+                If None, the default layout is used. Default is None.
+        '''
+
         super().__init__(particles, boxes)
 
-        self.pressures = pressureFromParticles(particles, self.box_lengths, self.density, self.temperature)
+        self.pressures = pressureFromParticles(particles, self.box_lengths, self.density)
 
         if plotprefs is None:
             self.plotprefs = PlotPreferences(markersize=3, marker="s")
@@ -104,6 +135,9 @@ class PhaseDiagram(VaryingInitialConditionsSims):
 
 
     def plot(self):
+        '''
+        Make a scatter plot of temperature vs. pressure, with points coloured according to their density.
+        '''
 
         sc = self.ax.scatter(self.temperature, self.pressures, c=self.density, s=self.plotprefs.markersize,
                           marker=self.plotprefs.marker)
@@ -113,6 +147,9 @@ class PhaseDiagram(VaryingInitialConditionsSims):
 
 
     def plotPressureColors(self):
+        '''
+        Make a scatter plot of temperature vs. density, with points coloured according to pressure.
+        '''
 
         sc = self.ax.scatter(self.temperature, self.density, c=self.pressures, s=self.plotprefs.markersize,
                              marker=self.plotprefs.marker, vmax=50)
@@ -122,6 +159,9 @@ class PhaseDiagram(VaryingInitialConditionsSims):
 
 
     def contours(self):
+        '''
+        Make a contour plot of temperature vs. pressure with contours for the density.
+        '''
 
         cntr = self.ax.tricontourf(self.temperature, self.pressures, self.density)
         self.ax.set_xlabel("Temperature")
@@ -130,6 +170,16 @@ class PhaseDiagram(VaryingInitialConditionsSims):
 
 
     def contoursPressure(self, levels=15, minpressure=0.0001, maxpressure=1000):
+        '''
+        Make a contour plot of temperature vs. density with contours for the pressure.
+
+        :param levels: int
+                Number of contour levels to draw
+        :param minpressure: float
+                Minimum pressure to include
+        :param maxpressure: float
+                Maximum pressure to include
+        '''
 
         goodpressure = (self.pressures < maxpressure) & (self.pressures > minpressure)
         print ("Number of points used:", np.sum(goodpressure))
