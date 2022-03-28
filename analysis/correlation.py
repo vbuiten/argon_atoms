@@ -9,7 +9,17 @@ from analysis.utils import PlotPreferences, RepeatedSimsBase
 from scipy.interpolate import interp1d
 
 class DistanceHistogram(RepeatedSimsBase):
-    '''Create a histogram of the distances between pairs of particles.'''
+    '''Create a histogram of the distances between pairs of particles.
+
+    :param particles: list of framework.particles.Particles instances
+    :param box_lengths: ndarray of shape (n_sims, dim)
+            Linear size of the box
+    :param bins: int
+            Number of bins to use in the histogram
+    :param plotprefs: NoneType or analysis.utils.PlotPreferences instance
+            If an instance of PlotPreferences, the given preferences are used.
+            If None, the default layout is used.
+    '''
 
     def __init__(self, particles, box_lengths, bins=100, plotprefs=None):
 
@@ -55,6 +65,9 @@ class DistanceHistogram(RepeatedSimsBase):
 
 
     def plotTotal(self):
+        '''
+        Plot the pair distances of all configurations together.
+        '''
 
         self.ax.plot(self.bin_mids, self.counts, marker=self.plotprefs.marker)
         self.ax.set_xlabel(r"Distance")
@@ -62,6 +75,9 @@ class DistanceHistogram(RepeatedSimsBase):
 
 
     def plotIterationAveraged(self):
+        '''
+        Plot the pair distance histogram averaged over iterations.
+        '''
 
         self.ax.plot(self.bin_mids, self.counts_avg, markersize=self.plotprefs.markersize, marker=self.plotprefs.marker,
                      label="Mean")
@@ -85,6 +101,19 @@ class DistanceHistogram(RepeatedSimsBase):
 
 
 class CorrelationFunction(DistanceHistogram):
+    '''
+    Compute and plot the pair correlation function, with mean and confidence intervals.
+
+    :param particles: list of framework.particles.Particles instances
+    :param box_lengths: ndarray of shape (n_sims, dim)
+            Linear size of the box
+    :param bins: int
+            Number of bins to use in the histogram
+    :param plotprefs: NoneType or analysis.utils.PlotPreferences instance
+            If an instance of PlotPreferences, the given preferences are used.
+            If None, the default layout is used.
+    '''
+
     def __init__(self, particles, box_lengths, bins=100, plotprefs=None):
         super().__init__(particles, box_lengths, bins, plotprefs)
 

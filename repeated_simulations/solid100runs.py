@@ -11,7 +11,7 @@ from data.utils import folderPath
 plotprefs = PlotPreferences(usetex=True)
 
 n_atoms = 108
-iterations = 50
+iterations = 100
 temperature = 0.5
 density = 1.2
 

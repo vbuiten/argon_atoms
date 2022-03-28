@@ -5,6 +5,20 @@ from simulation.utils import UnitScaler
 
 class EnergyPlotter:
     def __init__(self, filename, plotprefs=None, unitscaler=None, dimless=False):
+        '''
+        Class for plotting the energy evolution throughout a simulation
+
+        :param filename: str or analysis.utils.History instance
+                File or object containing the simulation data
+        :param plotprefs: analysis.utils.PlotPreferences instance or NoneType
+                If an instance of PlotPreferences, the given preferences are used.
+                If None, the default layout is used. Default is None.
+        :param unitscaler: simulation.utils.UnitScaler instance or NoneType
+                If an instance of UnitScaler, uses the given scaler for converting to SI units.
+                If NoneType, uses the default UnitScaler, for argon. Default is None.
+        :param dimless: bool
+                If True, plots dimensionless energies and times. Uses SI instead. Default is False.
+        '''
 
         self.history = load_history(filename)
 
@@ -75,7 +89,17 @@ class EnergyPlotter:
 
 
 class EquilibrationPlotter:
+
     def __init__(self, energy_fractions, plotprefs=None):
+        '''
+        Plot the fraction of target kinetic energy over measured kinetic energy throughout the equilibration process.
+
+        :param energy_fractions: ndarray of shape(n_iterations)
+                Fraction of target kinetic energy over measured kinetic energy for each equilibration step
+        :param plotprefs: analysis.utils.PlotPreferences instance or NoneType
+                If an instance of PlotPreferences, the given preferences are used.
+                If None, the default layout is used. Default is None.
+        '''
 
         self.energy_fractions = np.array(energy_fractions)
         self.iterations = np.array([i+1 for i in range(len(energy_fractions))])

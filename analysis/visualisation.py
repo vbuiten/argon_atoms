@@ -7,6 +7,16 @@ import analysis.utils
 from analysis.utils import load_history, PlotPreferences
 
 class TrajectoryPlotter:
+    '''
+    Class for making plots of particle trajectories in a simulation.
+
+    :param history: str or analysis.utils.History instance
+            File or History instance containing the simulation data
+    :param plotprefs: NoneType or analysis.utils.PlotPreferences instance
+            If an instance of PlotPreferences, the given preferences are used.
+            If None, the default layout is used.
+    '''
+
     def __init__(self, history, plotprefs=None):
 
         if plotprefs is None:
@@ -40,6 +50,14 @@ class TrajectoryPlotter:
         self.ax.set_ylim(box_edges[1,0], box_edges[1,1])
 
     def scatter(self, min_idx, max_idx):
+        '''
+        Makes a scatter plot of trajectories.
+
+        :param min_idx: int
+                Index of the first time step to plot
+        :param max_idx: int
+                Index up to which the time steps are shown (exclusive)
+        '''
 
         for i in range(self.history.n_atoms):
             trajectory = self.history.pos[min_idx:max_idx,i]
@@ -51,7 +69,16 @@ class TrajectoryPlotter:
             else:
                 self.ax.scatter(trajectory[:,0], trajectory[:,1], alpha=0.5, s=self.plotprefs.markersize)
 
+
     def plot(self, min_idx, max_idx):
+        '''
+        Makes a plot with lines between points in time for each particle.
+
+        :param min_idx: int
+                Index of the first time step to plot
+        :param max_idx: int
+                Index up to which the time steps are shown (exclusive)
+        '''
 
         for i in range(self.history.n_atoms):
             trajectory = self.history.pos[min_idx:max_idx,i]
@@ -69,5 +96,8 @@ class TrajectoryPlotter:
                              markersize=self.plotprefs.markersize)
 
     def show(self):
+        '''
+        Show the figure.
+        '''
 
         self.fig.show()

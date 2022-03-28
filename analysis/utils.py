@@ -6,6 +6,13 @@ from framework.particles import Particles
 from framework.box import BoxBase
 
 class History:
+    '''
+    Class for loading simulation data.
+
+    :param filename: str
+            Absolute or relative path of the hdf5 file containing the simulation data
+    '''
+
     def __init__(self, filename):
 
         # load the saved data set
@@ -31,6 +38,14 @@ class History:
 
 
 def load_history(historyfile):
+    '''
+    Utility function for loading simulation data from either a file or a pre-loaded History instance.
+
+    :param historyfile: str or History instance
+            File or object containing the simulation data
+    :return: history: History instance
+            History object containing the simulation data
+    '''
 
     if isinstance(historyfile, History):
         history = historyfile
@@ -47,7 +62,13 @@ def load_history(historyfile):
 class ParticlesFromHistory(Particles):
     '''Class for loading a single particle set from a file of simulation results,
     as well as the box used to run the simulations in. By default, the last configuration
-    in the particle history is loaded.'''
+    in the particle history is loaded.
+
+    :param history: str of History instance
+            File or object containing simulation data
+    :param time_idx: int
+            Index of the saved time step for which to load the particles. Default -1 (i.e. the final configuration)
+    '''
 
     def __init__(self, history, time_idx=-1):
 
@@ -64,7 +85,13 @@ class ParticlesFromHistory(Particles):
 
 
 class SimulationIterations:
-    '''Class for loading a series of iterations of a simulation, all stored in datafolder.'''
+    '''Class for loading a series of iterations of a simulation, all stored in datafolder.
+
+    :param datafolder: str
+            Folder containing all the simulation data for the initial conditions of interest
+    :param samebox: bool
+            Whether or not all simulations have the same box size. Default is True
+    '''
 
     def __init__(self, datafolder, samebox=True):
 
@@ -78,12 +105,6 @@ class SimulationIterations:
                 history = load_history(datafolder+f)
                 self.histories.append(history)
 
-                '''
-                particles = Particles(history.n_atoms, history.dim)
-                particles.positions = history.pos[-1]
-                particles.velocities = history.vel[-1]
-
-                '''
                 particles = ParticlesFromHistory(history)
                 self.final_particles.append(particles)
 
@@ -99,6 +120,21 @@ class SimulationIterations:
 
 
 class PlotPreferences:
+    '''
+    Class for holding several layout preferences for plots.
+
+    :param usetex: bool
+            If True, uses Latex compilation
+    :param markersize: float
+            Sets the marker size
+    :param figsize: tuple of length 2
+            Sets the figure size
+    :param dpi: int
+            Sets the dpi of the figure
+    :param marker: str
+            Sets the type of marker to use in plots
+    '''
+
     def __init__(self, usetex=False, markersize=3, figsize=(7,5), dpi=240,\
                  marker="o"):
 
@@ -115,7 +151,14 @@ class PlotPreferences:
 
 class RepeatedSimsBase:
     '''Base class for inferring various useful global quantities for
-    a number of random realisations of the same initial conditions.'''
+    a number of random realisations of the same initial conditions.
+
+    :param particles: framework.particles.Particles instance or list thereof
+            Particle system(s) to analyse
+    :param box_lengths: float or ndarray of shape (n_sims,) or (dim,)
+            Linear size of the box. The first index is assumed to be the length in all simulations and dimensions.
+
+    '''
 
     def __init__(self, particles, box_lengths):
 
@@ -144,6 +187,14 @@ class RepeatedSimsBase:
 
 
 class VaryingInitialConditionsSims:
+    '''
+    Base class for analysing simulations of varying initial conditions.
+
+    :param particles: framework.particles.Particles instance or list thereof
+            Particle system(s) to analyse
+    :param boxes: list of framework.box.BoxBase instances
+            BoxBase instances corresponding the particle systems.
+    '''
 
     def __init__(self, particles, boxes):
 
