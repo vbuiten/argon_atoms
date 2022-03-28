@@ -6,6 +6,7 @@ is written by Victorine Buiten.
 Last updated: March 28 2022
 
 ##Repository Contents
+
 The repository is divided into folders for different functionalities of the code. These are the following:
 * _analysis_ contains several files of code for analysing simulation results, e.g. for plotting the pair correlation 
 function.
@@ -17,6 +18,7 @@ function.
 behaves for a small number of particles.
 
 ##Dependencies
+
 The simulation code uses only the NumPy and Numba packages. For the analysis, SciPy and Matplotlib are also required.
 
 ##How to Run the Code
